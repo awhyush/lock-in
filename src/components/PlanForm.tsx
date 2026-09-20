@@ -21,7 +21,7 @@ export function PlanForm({
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<PlanMode>(initialPlanMode);
-  const [goals, setGoals] = useState<GoalDraft[]>(initialGoals.length > 0 ? initialGoals : [{ id: null, label: "" }]);
+  const [goals, setGoals] = useState<GoalDraft[]>(initialGoals);
   const [newGoalLabel, setNewGoalLabel] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,12 +34,8 @@ export function PlanForm({
     setNewGoalLabel("");
   }
 
-  function updateGoalLabel(index: number, label: string) {
-    setGoals((g) => g.map((goal, i) => (i === index ? { ...goal, label } : goal)));
-  }
-
   function removeGoal(index: number) {
-    setGoals((g) => (g.length <= 1 ? g : g.filter((_, i) => i !== index)));
+    setGoals((g) => g.filter((_, i) => i !== index));
   }
 
   async function handleSubmit() {
@@ -102,51 +98,52 @@ export function PlanForm({
 
                 {key === "custom" && active && (
                   <div className="mt-2 flex flex-col gap-2 rounded-xl border border-line bg-surface-2 p-3.5">
-                    {goals.map((g, i) => (
-                      <div key={g.id ?? `new-${i}`} className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={g.label}
-                          maxLength={MAX_GOAL_LABEL_LENGTH}
-                          placeholder="e.g. Read, Meditate, No sugar"
-                          onChange={(e) => updateGoalLabel(i, e.target.value)}
-                          className="w-full rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeGoal(i)}
-                          disabled={goals.length <= 1}
-                          aria-label={`Remove ${g.label || "goal"}`}
-                          className="flex-none text-muted disabled:opacity-30"
-                        >
-                          {"✕"}
-                        </button>
-                      </div>
-                    ))}
-                    {goals.length < MAX_GOALS && (
-                      <div className="flex items-center gap-2 pt-1">
-                        <input
-                          type="text"
-                          value={newGoalLabel}
-                          maxLength={MAX_GOAL_LABEL_LENGTH}
-                          placeholder="Add a goal"
-                          onChange={(e) => setNewGoalLabel(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              addGoal();
-                            }
-                          }}
-                          className="w-full rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                        />
-                        <button
-                          type="button"
-                          onClick={addGoal}
-                          className="flex-none rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink"
-                        >
-                          Add
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newGoalLabel}
+                        maxLength={MAX_GOAL_LABEL_LENGTH}
+                        placeholder="e.g. Read, Meditate, No sugar"
+                        onChange={(e) => setNewGoalLabel(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addGoal();
+                          }
+                        }}
+                        className="w-full rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      />
+                      <button
+                        type="button"
+                        onClick={addGoal}
+                        disabled={!newGoalLabel.trim() || goals.length >= MAX_GOALS}
+                        className="flex-none rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink disabled:opacity-50"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {goals.length > 0 ? (
+                      <ul className="flex flex-col gap-1.5">
+                        {goals.map((g, i) => (
+                          <li
+                            key={g.id ?? `new-${i}`}
+                            className="flex items-center justify-between gap-2 rounded-md border border-line bg-surface px-2.5 py-1.5"
+                          >
+                            <span className="truncate text-sm text-ink">{g.label}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeGoal(i)}
+                              aria-label={`Remove ${g.label}`}
+                              className="flex-none text-muted"
+                            >
+                              {"✕"}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="px-0.5 text-xs text-muted">Add at least one goal to track.</p>
                     )}
                   </div>
                 )}
