@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   DAY_RULES,
   HABIT_KEYS,
-  HABIT_TARGETS,
   SCHEDULE,
   computeStreak,
   dateKey,
@@ -12,7 +12,7 @@ import {
   habitTargetText,
   type CheckInData,
   type HabitKey,
-  type Intensity,
+  type HabitTarget,
 } from "@/lib/habits";
 import { SignOutButton } from "@/components/SignOutButton";
 
@@ -25,13 +25,13 @@ const BOOLEAN_KEYS: Extract<HabitKey, "exercise" | "study" | "build" | "movement
 
 export function Tracker({
   name,
-  intensity,
+  targets,
   todayKey,
   todayLabel,
   initialHistory,
 }: {
   name: string;
-  intensity: Intensity;
+  targets: Record<HabitKey, HabitTarget>;
   todayKey: string;
   todayLabel: string;
   initialHistory: Record<string, CheckInData>;
@@ -42,7 +42,6 @@ export function Tracker({
 
   const weekday = useMemo(() => new Date(`${todayKey}T00:00:00`).getDay(), [todayKey]);
   const rule = DAY_RULES[weekday];
-  const targets = HABIT_TARGETS[intensity];
   const today = history[todayKey] ?? { exercise: false, study: false, apply: 0, build: false, movement: false, noNap: false };
 
   const days = useMemo(() => {
@@ -94,7 +93,15 @@ export function Tracker({
             <div className="font-mono text-3xl font-semibold leading-none text-accent tabular-nums">{streak}</div>
             <div className="text-[11px] text-muted">day streak</div>
           </div>
-          <SignOutButton />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/settings"
+              className="font-mono text-[11px] uppercase tracking-wide text-muted underline underline-offset-2"
+            >
+              Edit plan
+            </Link>
+            <SignOutButton />
+          </div>
         </div>
       </header>
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { INTENSITIES } from "@/lib/habits";
+import { PLAN_MODES, clampCustomTargets, type PlanMode } from "@/lib/habits";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -10,15 +10,25 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => null);
-  const intensity = body?.intensity;
-  if (typeof intensity !== "string" || !INTENSITIES.includes(intensity as never)) {
-    return NextResponse.json({ error: "Invalid intensity." }, { status: 400 });
+  const mode = body?.mode;
+  if (typeof mode !== "string" || !PLAN_MODES.includes(mode as PlanMode)) {
+    return NextResponse.json({ error: "Invalid plan." }, { status: 400 });
   }
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { intensity, onboarded: true },
-  });
+  const data: { intensity: string; onboarded: boolean; customTargets?: string } = {
+    intensity: mode,
+    onboarded: true,
+  };
+
+  if (mode === "custom") {
+    const custom = clampCustomTargets(body?.customTargets ?? {});
+    if (!custom) {
+      return NextResponse.json({ error: "Invalid custom targets." }, { status: 400 });
+    }
+    data.customTargets = JSON.stringify(custom);
+  }
+
+  await prisma.user.update({ where: { id: session.user.id }, data });
 
   return NextResponse.json({ ok: true });
 }

@@ -1,13 +1,15 @@
 export type HabitKey = "exercise" | "study" | "apply" | "build" | "movement";
 
-export type Intensity = "light" | "standard" | "ambitious";
+/** A recommended, pre-built plan. */
+export type Preset = "light" | "standard" | "ambitious";
 
-export const INTENSITIES: Intensity[] = ["light", "standard", "ambitious"];
+/** What the user actually has selected: one of the recommended presets, or their own numbers. */
+export type PlanMode = Preset | "custom";
 
-export const INTENSITY_INFO: Record<
-  Intensity,
-  { title: string; description: string }
-> = {
+export const PRESETS: Preset[] = ["light", "standard", "ambitious"];
+export const PLAN_MODES: PlanMode[] = [...PRESETS, "custom"];
+
+export const PLAN_INFO: Record<PlanMode, { title: string; description: string }> = {
   light: {
     title: "Light",
     description: "Easing back in. Small, unskippable minimums while the habit forms.",
@@ -20,11 +22,64 @@ export const INTENSITY_INFO: Record<
     title: "Ambitious",
     description: "Full send. Longer blocks across the board for when you're ready to push.",
   },
+  custom: {
+    title: "Custom",
+    description: "Set your own minutes for each habit — how much time are you actually willing to spend on yourself?",
+  },
 };
 
 export type HabitTarget = { label: string; minutes?: number; aim?: number };
 
-export const HABIT_TARGETS: Record<Intensity, Record<HabitKey, HabitTarget>> = {
+/** Minutes (or, for applications, a target count) per habit — what a custom plan stores. */
+export type CustomTargets = {
+  exercise: number;
+  study: number;
+  apply: number;
+  build: number;
+  movement: number;
+};
+
+export const CUSTOM_TARGET_BOUNDS: Record<keyof CustomTargets, { min: number; max: number; step: number }> = {
+  exercise: { min: 0, max: 180, step: 5 },
+  study: { min: 0, max: 240, step: 5 },
+  apply: { min: 0, max: 30, step: 1 },
+  build: { min: 0, max: 240, step: 5 },
+  movement: { min: 0, max: 120, step: 5 },
+};
+
+export const DEFAULT_CUSTOM_TARGETS: CustomTargets = {
+  exercise: 30,
+  study: 60,
+  apply: 5,
+  build: 60,
+  movement: 25,
+};
+
+export const HABIT_LABELS: Record<HabitKey, string> = {
+  exercise: "Exercise",
+  study: "Study / DSA",
+  apply: "Job applications",
+  build: "Technical work",
+  movement: "Movement",
+};
+
+export function customTargetsToHabitTargets(custom: CustomTargets): Record<HabitKey, HabitTarget> {
+  return {
+    exercise: { label: HABIT_LABELS.exercise, minutes: custom.exercise },
+    study: { label: HABIT_LABELS.study, minutes: custom.study },
+    apply: { label: HABIT_LABELS.apply, aim: custom.apply },
+    build: { label: HABIT_LABELS.build, minutes: custom.build },
+    movement: { label: HABIT_LABELS.movement, minutes: custom.movement },
+  };
+}
+
+/** Resolves whatever plan a user has (preset or custom) into the targets the dashboard renders. */
+export function resolveTargets(mode: PlanMode, custom: CustomTargets | null): Record<HabitKey, HabitTarget> {
+  if (mode === "custom") return customTargetsToHabitTargets(custom ?? DEFAULT_CUSTOM_TARGETS);
+  return HABIT_TARGETS[mode];
+}
+
+export const HABIT_TARGETS: Record<Preset, Record<HabitKey, HabitTarget>> = {
   light: {
     exercise: { label: "Exercise", minutes: 20 },
     study: { label: "Study / DSA", minutes: 30 },
@@ -52,6 +107,32 @@ export function habitTargetText(t: HabitTarget): string {
   if (t.aim != null) return `aim for ${t.aim}`;
   if (t.minutes != null) return `${t.minutes} min minimum`;
   return "";
+}
+
+export function clampCustomTargets(input: Partial<Record<keyof CustomTargets, unknown>>): CustomTargets | null {
+  const result = {} as CustomTargets;
+  for (const key of Object.keys(CUSTOM_TARGET_BOUNDS) as (keyof CustomTargets)[]) {
+    const bounds = CUSTOM_TARGET_BOUNDS[key];
+    const raw = input[key];
+    if (typeof raw !== "number" || !Number.isFinite(raw)) return null;
+    result[key] = Math.min(bounds.max, Math.max(bounds.min, Math.round(raw)));
+  }
+  return result;
+}
+
+/** Parses the raw `intensity` / `customTargets` DB columns into a valid PlanMode + CustomTargets. */
+export function parseStoredPlan(
+  rawMode: string,
+  rawCustomTargets: string | null,
+): { mode: PlanMode; custom: CustomTargets | null } {
+  const mode: PlanMode = PLAN_MODES.includes(rawMode as PlanMode) ? (rawMode as PlanMode) : "standard";
+  if (!rawCustomTargets) return { mode, custom: null };
+  try {
+    const parsed = JSON.parse(rawCustomTargets);
+    return { mode, custom: clampCustomTargets(parsed) };
+  } catch {
+    return { mode, custom: null };
+  }
 }
 
 export const HABIT_KEYS: HabitKey[] = ["exercise", "study", "apply", "build", "movement"];

@@ -12,8 +12,9 @@ model User {
   name         String
   email        String    @unique
   passwordHash String
-  intensity    String    @default("standard")
-  onboarded    Boolean   @default(false)
+  intensity      String    @default("standard")
+  customTargets  String?
+  onboarded      Boolean   @default(false)
   createdAt    DateTime  @default(now())
   checkIns     CheckIn[]
 }

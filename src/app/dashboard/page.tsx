@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Tracker } from "@/components/Tracker";
-import { dateKey, INTENSITIES, type CheckInData, type Intensity } from "@/lib/habits";
+import { dateKey, parseStoredPlan, resolveTargets, type CheckInData } from "@/lib/habits";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -38,16 +38,15 @@ export default async function DashboardPage() {
     history[todayKey] = { exercise: false, study: false, apply: 0, build: false, movement: false, noNap: false };
   }
 
-  const intensity: Intensity = INTENSITIES.includes(user.intensity as Intensity)
-    ? (user.intensity as Intensity)
-    : "standard";
+  const { mode, custom } = parseStoredPlan(user.intensity, user.customTargets);
+  const targets = resolveTargets(mode, custom);
 
   const todayLabel = today.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 
   return (
     <Tracker
       name={user.name}
-      intensity={intensity}
+      targets={targets}
       todayKey={todayKey}
       todayLabel={todayLabel}
       initialHistory={history}
