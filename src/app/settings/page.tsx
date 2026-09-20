@@ -18,7 +18,15 @@ export default async function SettingsPage() {
   if (!user) redirect("/login");
   if (!user.onboarded) redirect("/onboarding");
 
-  const { mode, custom } = parseStoredPlan(user.intensity, user.customTargets);
+  const { mode } = parseStoredPlan(user.intensity, user.customTargets);
+  const goals = await prisma.goal.findMany({ where: { userId: user.id }, orderBy: { sortOrder: "asc" } });
 
-  return <PlanForm name={user.name} mode="settings" initialPlanMode={mode} initialCustomTargets={custom} />;
+  return (
+    <PlanForm
+      name={user.name}
+      mode="settings"
+      initialPlanMode={mode}
+      initialGoals={goals.map((g) => ({ id: g.id, label: g.label }))}
+    />
+  );
 }

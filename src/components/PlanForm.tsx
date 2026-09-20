@@ -2,43 +2,45 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  CUSTOM_TARGET_BOUNDS,
-  DEFAULT_CUSTOM_TARGETS,
-  HABIT_LABELS,
-  PLAN_INFO,
-  PLAN_MODES,
-  type CustomTargets,
-  type HabitKey,
-  type PlanMode,
-} from "@/lib/habits";
+import { PLAN_INFO, PLAN_MODES, type PlanMode } from "@/lib/habits";
+import { MAX_GOALS, MAX_GOAL_LABEL_LENGTH } from "@/lib/goals";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-const CUSTOM_ROWS: { key: keyof CustomTargets; suffix: string }[] = [
-  { key: "exercise", suffix: "min" },
-  { key: "study", suffix: "min" },
-  { key: "apply", suffix: "apps" },
-  { key: "build", suffix: "min" },
-  { key: "movement", suffix: "min" },
-];
+type GoalDraft = { id: string | null; label: string };
 
 export function PlanForm({
   name,
   mode,
   initialPlanMode,
-  initialCustomTargets,
+  initialGoals,
 }: {
   name: string;
   mode: "onboarding" | "settings";
   initialPlanMode: PlanMode;
-  initialCustomTargets: CustomTargets | null;
+  initialGoals: { id: string; label: string }[];
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<PlanMode>(initialPlanMode);
-  const [custom, setCustom] = useState<CustomTargets>(initialCustomTargets ?? DEFAULT_CUSTOM_TARGETS);
+  const [goals, setGoals] = useState<GoalDraft[]>(initialGoals.length > 0 ? initialGoals : [{ id: null, label: "" }]);
+  const [newGoalLabel, setNewGoalLabel] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const firstName = name.split(" ")[0];
+
+  function addGoal() {
+    const label = newGoalLabel.trim();
+    if (!label || goals.length >= MAX_GOALS) return;
+    setGoals((g) => [...g, { id: null, label }]);
+    setNewGoalLabel("");
+  }
+
+  function updateGoalLabel(index: number, label: string) {
+    setGoals((g) => g.map((goal, i) => (i === index ? { ...goal, label } : goal)));
+  }
+
+  function removeGoal(index: number) {
+    setGoals((g) => (g.length <= 1 ? g : g.filter((_, i) => i !== index)));
+  }
 
   async function handleSubmit() {
     setLoading(true);
@@ -48,7 +50,7 @@ export function PlanForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         mode: selected,
-        customTargets: selected === "custom" ? custom : undefined,
+        goals: selected === "custom" ? goals.filter((g) => g.label.trim()) : undefined,
       }),
     });
     setLoading(false);
@@ -75,7 +77,7 @@ export function PlanForm({
           <ThemeToggle className="mt-1 flex-none" />
         </div>
         <p className="mt-2 text-sm text-muted">
-          Pick a recommended plan, or set your own minutes per habit. You can change this anytime.
+          Pick a recommended plan, or track your own goals. You can change this anytime.
         </p>
 
         <div className="mt-6 flex flex-col gap-3">
@@ -100,34 +102,52 @@ export function PlanForm({
 
                 {key === "custom" && active && (
                   <div className="mt-2 flex flex-col gap-2 rounded-xl border border-line bg-surface-2 p-3.5">
-                    {CUSTOM_ROWS.map((row) => {
-                      const bounds = CUSTOM_TARGET_BOUNDS[row.key];
-                      return (
-                        <label key={row.key} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="font-medium">{HABIT_LABELS[row.key as HabitKey]}</span>
-                          <span className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              min={bounds.min}
-                              max={bounds.max}
-                              step={bounds.step}
-                              value={custom[row.key]}
-                              onChange={(e) =>
-                                setCustom((c) => ({
-                                  ...c,
-                                  [row.key]: Math.min(
-                                    bounds.max,
-                                    Math.max(bounds.min, Number(e.target.value) || 0),
-                                  ),
-                                }))
-                              }
-                              className="w-16 rounded-md border border-line bg-surface px-2 py-1 text-right text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                            />
-                            <span className="w-9 text-xs text-muted">{row.suffix}</span>
-                          </span>
-                        </label>
-                      );
-                    })}
+                    {goals.map((g, i) => (
+                      <div key={g.id ?? `new-${i}`} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={g.label}
+                          maxLength={MAX_GOAL_LABEL_LENGTH}
+                          placeholder="e.g. Read, Meditate, No sugar"
+                          onChange={(e) => updateGoalLabel(i, e.target.value)}
+                          className="w-full rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeGoal(i)}
+                          disabled={goals.length <= 1}
+                          aria-label={`Remove ${g.label || "goal"}`}
+                          className="flex-none text-muted disabled:opacity-30"
+                        >
+                          {"✕"}
+                        </button>
+                      </div>
+                    ))}
+                    {goals.length < MAX_GOALS && (
+                      <div className="flex items-center gap-2 pt-1">
+                        <input
+                          type="text"
+                          value={newGoalLabel}
+                          maxLength={MAX_GOAL_LABEL_LENGTH}
+                          placeholder="Add a goal"
+                          onChange={(e) => setNewGoalLabel(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addGoal();
+                            }
+                          }}
+                          className="w-full rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        />
+                        <button
+                          type="button"
+                          onClick={addGoal}
+                          className="flex-none rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

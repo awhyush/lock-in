@@ -20,8 +20,9 @@ Open [http://localhost:3000](http://localhost:3000).
 ## How it works
 
 1. **Sign up** with name, email, password (hashed with bcrypt, stored in Postgres via Prisma).
-2. **Onboarding**: pick a plan — Light, Standard, Ambitious, or Custom (set your own minutes per habit) — which decides every habit's target (`src/lib/habits.ts`). Changeable anytime from `/settings`.
-3. **Dashboard**: greets you by name, shows today's habits against that day's weekday rules, a running streak (computed over a real 60-day window under the hood, not just what's on screen), and a history strip you can widen to 14/30/90 days. Every tap writes straight to your account via `POST /api/checkin`.
+2. **Onboarding**: pick a plan — Light, Standard, Ambitious, or Custom — which decides every habit's target (`src/lib/habits.ts`). **Custom** is different from the other three: instead of retargeting the same 5 fixed habits, you define your own goals (at least one, as many as you want) — the dashboard tracks exactly those instead. Changeable anytime from `/settings`.
+3. **Dashboard**: greets you by name, shows today's habits/goals, a running streak (computed over a real 60-day window under the hood, not just what's on screen), and a history strip you can widen to 14/30/90 days — one row per habit (preset plans, `src/components/Tracker.tsx`) or per goal (custom plans, `src/components/GoalTracker.tsx`). Preset plans also get weekday rules (Friday's lighter, Saturday's just exercise, Sunday's recovery); custom goals are required every day, no variation. Every tap writes straight to your account via `POST /api/checkin` or `POST /api/goal-entries`.
+4. **Circles**: invite friends via a shareable code, see each other's last-14-day grid (done/not-done only — never exact counts or plan details), sorted by streak or this-week %, with a quiet "still to go today" nudge. A circle happily mixes preset- and custom-plan members — each renders their own row set.
 
 ## Deploying (Vercel)
 
@@ -34,12 +35,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Structure
 
-- `src/lib/habits.ts` — habit/intensity/weekday config and the streak logic, shared by the server and the client.
+- `src/lib/habits.ts` — the fixed 5-habit/weekday config and streak logic (preset plans), shared by server and client.
+- `src/lib/goals.ts` — the parallel, day-agnostic streak logic for custom-plan user-defined goals.
+- `src/lib/circles.ts` — loads a circle's detail for a viewer, resolving each member's rows/streak from either `habits.ts` or `goals.ts` depending on *their* plan.
 - `src/auth.ts` — NextAuth config (Credentials provider, JWT sessions).
-- `src/app/api/*` — signup, onboarding, check-in, and history (widening the strip beyond what loaded server-side) endpoints.
-- `src/app/{login,signup,onboarding,dashboard}` — the pages.
-- `src/components/Tracker.tsx` — the dashboard's interactive UI.
-- `prisma/schema.prisma` — `User` and `CheckIn` models.
+- `src/app/api/*` — signup, onboarding (also reconciles a custom plan's goal set), check-in/goal-entries, history/goal-history, and circles endpoints.
+- `src/app/{login,signup,onboarding,dashboard,settings,circles}` — the pages.
+- `src/components/{Tracker,GoalTracker}.tsx` — the dashboard's interactive UI for preset vs. custom plans; both render `HabitGrid.tsx`, the shared sticky-column day grid also used by `CircleView.tsx`.
+- `prisma/schema.prisma` — `User`, `CheckIn` (preset habits), `Goal`/`GoalEntry` (custom goals), `Circle`/`CircleMember`, `RateLimitHit`.
 
 ## Origin
 

@@ -18,8 +18,33 @@ model User {
   onboarded         Boolean        @default(false)
   createdAt         DateTime       @default(now())
   checkIns          CheckIn[]
+  goals             Goal[]
   ownedCircles      Circle[]       @relation("OwnedCircles")
   circleMemberships CircleMember[]
+}
+
+model Goal {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  sortOrder Int         @default(0)
+  createdAt DateTime    @default(now())
+  entries   GoalEntry[]
+
+  @@index([userId, sortOrder])
+}
+
+model GoalEntry {
+  id     String  @id @default(cuid())
+  goalId String
+  goal   Goal    @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  userId String
+  date   String
+  done   Boolean @default(false)
+
+  @@unique([goalId, date])
+  @@index([userId, date])
 }
 
 model Circle {

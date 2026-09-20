@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { HABIT_KEYS, HABIT_LABELS, dateKey, habitDone, type CheckInData, type HabitKey } from "@/lib/habits";
+import { dateKey } from "@/lib/habits";
+import { HabitGrid } from "@/components/HabitGrid";
 import type { CircleDetail, CircleMemberView } from "@/lib/circles";
 
 type SortMode = "streak" | "week";
@@ -111,7 +112,7 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
 
         <div className="flex flex-col gap-5">
           {sortedMembers.map((m) => (
-            <MemberRow key={m.userId} member={m} days={days} isSelf={m.userId === viewerId} />
+            <MemberRow key={m.userId} member={m} days={days} todayKey={circle.todayKey} isSelf={m.userId === viewerId} />
           ))}
         </div>
       </section>
@@ -122,10 +123,12 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
 function MemberRow({
   member,
   days,
+  todayKey,
   isSelf,
 }: {
   member: CircleMemberView;
   days: { key: string; label: string }[];
+  todayKey: string;
   isSelf: boolean;
 }) {
   return (
@@ -140,43 +143,7 @@ function MemberRow({
           {member.weekPercent != null && <span>{member.weekPercent}% this week</span>}
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <div className="grid w-max gap-x-1 gap-y-1" style={{ gridTemplateColumns: `92px repeat(${days.length}, 16px)` }}>
-          <div className="sticky left-0 z-10 bg-surface" />
-          {days.map((d) => (
-            <div key={d.key} className="text-center font-mono text-[8px] text-muted">
-              {d.label}
-            </div>
-          ))}
-          {HABIT_KEYS.map((key) => (
-            <MemberHabitRow key={key} label={HABIT_LABELS[key]} habitKey={key} days={days} history={member.history} />
-          ))}
-        </div>
-      </div>
+      <HabitGrid rows={member.rows} days={days} todayKey={todayKey} compact />
     </div>
-  );
-}
-
-function MemberHabitRow({
-  label,
-  habitKey,
-  days,
-  history,
-}: {
-  label: string;
-  habitKey: HabitKey;
-  days: { key: string }[];
-  history: Record<string, CheckInData>;
-}) {
-  return (
-    <>
-      <div className="sticky left-0 z-10 self-center truncate bg-surface pr-2 text-[10px] text-muted">{label}</div>
-      {days.map((d) => (
-        <div
-          key={d.key}
-          className={`h-4 w-4 rounded-[3px] ${habitDone(history[d.key], habitKey) ? "bg-good" : "bg-surface-2"}`}
-        />
-      ))}
-    </>
   );
 }

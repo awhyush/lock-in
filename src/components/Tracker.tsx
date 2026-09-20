@@ -17,6 +17,7 @@ import {
 } from "@/lib/habits";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
 
 const BOOLEAN_KEYS: Extract<HabitKey, "exercise" | "study" | "build" | "movement">[] = [
   "exercise",
@@ -67,6 +68,18 @@ export function Tracker({
     const el = stripScrollRef.current;
     if (el) el.scrollLeft = el.scrollWidth;
   }, [days]);
+
+  const gridRows: HabitGridRow[] = useMemo(
+    () =>
+      HABIT_KEYS.map((key) => ({
+        key,
+        label: targets[key].label,
+        history: Object.fromEntries(
+          Object.entries(history).map(([date, data]) => [date, habitDone(data, key)]),
+        ),
+      })),
+    [history, targets],
+  );
 
   const streak = useMemo(
     () => computeStreak(history, new Date(`${todayKey}T00:00:00`)),
@@ -246,22 +259,7 @@ export function Tracker({
             ))}
           </div>
         </div>
-        <div ref={stripScrollRef} className="overflow-x-auto">
-          <div
-            className="grid w-max gap-x-1 gap-y-2"
-            style={{ gridTemplateColumns: `92px repeat(${rangeDays}, 20px)` }}
-          >
-            <div className="sticky left-0 z-10 bg-surface" />
-            {days.map((d) => (
-              <div key={d.key} className="text-center font-mono text-[9px] text-muted">
-                {d.label}
-              </div>
-            ))}
-            {HABIT_KEYS.map((key) => (
-              <StripRow key={key} name={targets[key].label} days={days} history={history} habitKey={key} todayKey={todayKey} />
-            ))}
-          </div>
-        </div>
+        <HabitGrid rows={gridRows} days={days} todayKey={todayKey} scrollRef={stripScrollRef} />
       </section>
 
       <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
@@ -303,34 +301,3 @@ function CheckIcon({ className }: { className?: string }) {
   );
 }
 
-function StripRow({
-  name,
-  days,
-  history,
-  habitKey,
-  todayKey,
-}: {
-  name: string;
-  days: { key: string; weekday: number }[];
-  history: Record<string, CheckInData>;
-  habitKey: HabitKey;
-  todayKey: string;
-}) {
-  return (
-    <>
-      <div className="sticky left-0 z-10 self-center truncate bg-surface pr-2 text-xs text-muted">{name}</div>
-      {days.map((d) => {
-        const done = habitDone(history[d.key], habitKey);
-        const isToday = d.key === todayKey;
-        return (
-          <div
-            key={d.key}
-            className={`h-5 w-5 rounded-[4px] ${done ? "bg-good" : "bg-surface-2"} ${
-              isToday ? "ring-2 ring-inset ring-accent" : ""
-            }`}
-          />
-        );
-      })}
-    </>
-  );
-}
