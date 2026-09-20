@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  intensity    String    @default("standard")
+  onboarded    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  checkIns     CheckIn[]
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String
+  exercise  Boolean  @default(false)
+  study     Boolean  @default(false)
+  apply     Int      @default(0)
+  build     Boolean  @default(false)
+  movement  Boolean  @default(false)
+  noNap     Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}

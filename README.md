@@ -1,26 +1,34 @@
 # The Lock-In
 
-A daily habit tracker for a gym / study / job-search reset routine: exercise, DSA study, job applications, technical build work, and general movement, with weekday-specific minimums (e.g. Tuesday's football night counts as movement, no evening study expected).
+A habit tracker for a gym / study / job-search reset: accounts, per-user intensity ("how much are you actually investing right now"), a personalized daily plan, and a 14-day streak view.
 
-## Live version
+Built with Next.js (App Router), Prisma + SQLite, and NextAuth (Credentials).
 
-Open it here (syncs progress across devices via Claude's `db` capability, signed in):
-https://claude.ai/artifact/UzGHH5Q2bjnfBLLjfhV3fk
+## Running it
 
-## This repo
+```bash
+npm install
+npx prisma migrate dev   # first time only, creates prisma/dev.db
+npm run dev
+```
 
-`index.html` is the same page as the live artifact. Opened as a plain local file it still renders and lets you click around, but it won't save anything — `window.claude` (the sync layer) only exists inside the claude.ai artifact viewer.
+Open [http://localhost:3000](http://localhost:3000). Copy `.env.example` to `.env` first if it's missing (needs `DATABASE_URL` and `AUTH_SECRET`).
 
-To make a change and publish it live, edit `index.html` here, then republish the file to the artifact URL above.
+## How it works
 
-## Habits
+1. **Sign up** with name, email, password (hashed with bcrypt, stored in SQLite via Prisma).
+2. **Onboarding**: pick an intensity — Light, Standard, or Ambitious — which scales every habit's target minutes/aim (`src/lib/habits.ts`, `HABIT_TARGETS`).
+3. **Dashboard**: greets you by name, shows today's habits against that day's weekday rules (e.g. Tuesday's football night counts as movement, no study expected), a running streak, and a 14-day history strip. Every tap writes straight to your account via `POST /api/checkin`.
 
-| Habit | Minimum |
-|---|---|
-| Exercise | 30 min |
-| Study / DSA | 60 min |
-| Job applications | 45 min, aim for 5 |
-| Technical work (React/TS/full-stack build) | 60 min |
-| Movement | 20–30 min |
+## Structure
 
-Weekday rules (which habits are "core" vs "bonus" that day) live in `DAY_RULES` near the top of the script in `index.html`.
+- `src/lib/habits.ts` — habit/intensity/weekday config and the streak logic, shared by the server and the client.
+- `src/auth.ts` — NextAuth config (Credentials provider, JWT sessions).
+- `src/app/api/*` — signup, onboarding, and check-in endpoints.
+- `src/app/{login,signup,onboarding,dashboard}` — the pages.
+- `src/components/Tracker.tsx` — the dashboard's interactive UI.
+- `prisma/schema.prisma` — `User` and `CheckIn` models.
+
+## Origin
+
+`legacy-artifact/` holds the original single-file version of this tracker — a static HTML page published as a Claude artifact, synced via Claude's `db` capability instead of a real account system. Kept for reference; the Next.js app above is the one to use going forward.
