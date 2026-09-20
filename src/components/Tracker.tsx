@@ -3,18 +3,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
+  DAY_RULES,
   HABIT_KEYS,
   HISTORY_RANGE_OPTIONS,
   computeStreak,
   dateKey,
   describeDayRule,
-  getDayRule,
   habitDone,
   habitTargetText,
   type CheckInData,
   type HabitKey,
   type HabitTarget,
-  type SportDays,
 } from "@/lib/habits";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -33,7 +32,6 @@ export function Tracker({
   todayLabel,
   initialHistory,
   initialLoadedDays,
-  sportDays,
 }: {
   name: string;
   targets: Record<HabitKey, HabitTarget>;
@@ -41,7 +39,6 @@ export function Tracker({
   todayLabel: string;
   initialHistory: Record<string, CheckInData>;
   initialLoadedDays: number;
-  sportDays: SportDays;
 }) {
   const [history, setHistory] = useState<Record<string, CheckInData>>(initialHistory);
   const [status, setStatus] = useState<string | null>(null);
@@ -52,7 +49,7 @@ export function Tracker({
   const firstName = name.split(" ")[0];
 
   const weekday = useMemo(() => new Date(`${todayKey}T00:00:00`).getDay(), [todayKey]);
-  const rule = getDayRule(weekday, sportDays);
+  const rule = DAY_RULES[weekday];
   const today = history[todayKey] ?? { exercise: false, study: false, apply: 0, build: false, movement: false, noNap: false };
 
   const days = useMemo(() => {
@@ -72,8 +69,8 @@ export function Tracker({
   }, [days]);
 
   const streak = useMemo(
-    () => computeStreak(history, new Date(`${todayKey}T00:00:00`), sportDays),
-    [history, todayKey, sportDays],
+    () => computeStreak(history, new Date(`${todayKey}T00:00:00`)),
+    [history, todayKey],
   );
 
   async function selectRange(n: number) {
@@ -270,7 +267,7 @@ export function Tracker({
       <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
         <p className="mb-1 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Weekly plan</p>
         {[0, 1, 2, 3, 4, 5, 6].map((d) => {
-          const dayRule = getDayRule(d, sportDays);
+          const dayRule = DAY_RULES[d];
           return (
             <div key={d} className="flex items-center justify-between gap-3 border-t border-line py-3 first:border-t-0">
               <span className="text-sm font-semibold">{dayRule.name}</span>

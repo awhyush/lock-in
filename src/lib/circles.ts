@@ -6,7 +6,6 @@ import {
   computeWeekCompletion,
   dateKey,
   dayComplete,
-  parseSportDays,
   type CheckInData,
 } from "@/lib/habits";
 
@@ -41,7 +40,7 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
 
   const circle = await prisma.circle.findUnique({
     where: { id: circleId },
-    include: { members: { include: { user: { select: { id: true, name: true, sportDays: true } } } } },
+    include: { members: { include: { user: { select: { id: true, name: true } } } } },
   });
   if (!circle) return null;
 
@@ -73,11 +72,10 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
   }
 
   const members: CircleMemberView[] = circle.members.map((m) => {
-    const sportDays = parseSportDays(m.user.sportDays);
     const fullHistory = historyByUser.get(m.user.id) ?? {};
-    const streak = computeStreak(fullHistory, today, sportDays);
-    const weekPercent = computeWeekCompletion(fullHistory, today, sportDays);
-    const doneToday = dayComplete(fullHistory[todayKey], today.getDay(), sportDays) !== false;
+    const streak = computeStreak(fullHistory, today);
+    const weekPercent = computeWeekCompletion(fullHistory, today);
+    const doneToday = dayComplete(fullHistory[todayKey], today.getDay()) !== false;
     const history: Record<string, CheckInData> = {};
     for (const [date, data] of Object.entries(fullHistory)) {
       if (date >= visibleFromKey) history[date] = data;

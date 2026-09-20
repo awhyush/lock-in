@@ -11,7 +11,6 @@ import {
   type CustomTargets,
   type HabitKey,
   type PlanMode,
-  type SportDays,
 } from "@/lib/habits";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -23,32 +22,23 @@ const CUSTOM_ROWS: { key: keyof CustomTargets; suffix: string }[] = [
   { key: "movement", suffix: "min" },
 ];
 
-const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
-
 export function PlanForm({
   name,
   mode,
   initialPlanMode,
   initialCustomTargets,
-  initialSportDays,
 }: {
   name: string;
   mode: "onboarding" | "settings";
   initialPlanMode: PlanMode;
   initialCustomTargets: CustomTargets | null;
-  initialSportDays: SportDays;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<PlanMode>(initialPlanMode);
   const [custom, setCustom] = useState<CustomTargets>(initialCustomTargets ?? DEFAULT_CUSTOM_TARGETS);
-  const [sportDays, setSportDays] = useState<SportDays>(initialSportDays);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const firstName = name.split(" ")[0];
-
-  function toggleSportDay(day: number) {
-    setSportDays((days) => (days.includes(day) ? days.filter((d) => d !== day) : [...days, day].sort()));
-  }
 
   async function handleSubmit() {
     setLoading(true);
@@ -59,7 +49,6 @@ export function PlanForm({
       body: JSON.stringify({
         mode: selected,
         customTargets: selected === "custom" ? custom : undefined,
-        sportDays,
       }),
     });
     setLoading(false);
@@ -144,34 +133,6 @@ export function PlanForm({
               </div>
             );
           })}
-        </div>
-
-        <div className="mt-4 rounded-xl border border-line bg-surface p-4">
-          <p className="text-sm font-semibold">Do you play a sport?</p>
-          <p className="mt-1 text-sm text-muted">
-            Pick the night(s), if any. On those days sport covers your movement, and nothing else is expected.
-          </p>
-          <div className="mt-3 flex gap-2">
-            {WEEKDAY_LABELS.map((label, day) => {
-              const active = sportDays.includes(day);
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => toggleSportDay(day)}
-                  aria-pressed={active}
-                  aria-label={
-                    ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][day]
-                  }
-                  className={`flex h-9 w-9 flex-none items-center justify-center rounded-full border font-mono text-xs ${
-                    active ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface-2 text-muted"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {error && <p className="mt-3 text-sm text-warn">{error}</p>}
