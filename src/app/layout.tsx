@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: ["habit tracker", "daily routine", "gym tracker", "study tracker", "job search tracker", "streak tracker"],
+  keywords: ["habit tracker", "daily routine", "gym tracker", "study tracker", "personal goal tracker", "streak tracker"],
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   robots: { index: true, follow: true },

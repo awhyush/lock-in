@@ -45,7 +45,7 @@ export default function OpengraphImage() {
         </div>
         <div style={{ display: "flex", fontSize: 30, color: "#9a9da6", maxWidth: 900 }}>{SITE_DESCRIPTION}</div>
         <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
-          {["Exercise", "Study", "Applications", "Build", "Movement"].map((label) => (
+          {["Exercise", "Study", "Work", "Personal", "Movement"].map((label) => (
             <div
               key={label}
               style={{

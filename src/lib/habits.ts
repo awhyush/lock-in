@@ -12,25 +12,25 @@ export const PLAN_MODES: PlanMode[] = [...PRESETS, "custom"];
 export const PLAN_INFO: Record<PlanMode, { title: string; description: string }> = {
   light: {
     title: "Light",
-    description: "Easing back in. Small, unskippable minimums while the habit forms.",
+    description: "Easing back in. Small, unskippable minimums while you build the habit.",
   },
   standard: {
     title: "Standard",
-    description: "The actual reset: gym, study, applications and build time, most days.",
+    description: "The daily reset: meaningful blocks of time across the things you want to improve.",
   },
   ambitious: {
     title: "Ambitious",
-    description: "Full send. Longer blocks across the board for when you're ready to push.",
+    description: "Full send. Longer blocks across the board when you're ready to push.",
   },
   custom: {
     title: "Custom",
-    description: "Set your own minutes for each habit: how much time are you actually willing to spend on yourself?",
+    description: "Set your own minutes for each habit. Decide what showing up looks like for you.",
   },
 };
 
 export type HabitTarget = { label: string; minutes?: number; aim?: number };
 
-/** Minutes (or, for applications, a target count) per habit — what a custom plan stores. */
+/** Minutes (or, for count-based habits, a target count) per habit — what a custom plan stores. */
 export type CustomTargets = {
   exercise: number;
   study: number;
@@ -58,8 +58,8 @@ export const DEFAULT_CUSTOM_TARGETS: CustomTargets = {
 export const HABIT_LABELS: Record<HabitKey, string> = {
   exercise: "Exercise",
   study: "Study",
-  apply: "Job applications",
-  build: "Technical work",
+  apply: "Work",
+  build: "Personal",
   movement: "Movement",
 };
 
@@ -83,22 +83,22 @@ export const HABIT_TARGETS: Record<Preset, Record<HabitKey, HabitTarget>> = {
   light: {
     exercise: { label: "Exercise", minutes: 20 },
     study: { label: "Study", minutes: 30 },
-    apply: { label: "Job applications", aim: 3 },
-    build: { label: "Technical work", minutes: 30 },
+    apply: { label: "Work", aim: 3 },
+    build: { label: "Personal", minutes: 30 },
     movement: { label: "Movement", minutes: 15 },
   },
   standard: {
     exercise: { label: "Exercise", minutes: 30 },
     study: { label: "Study", minutes: 60 },
-    apply: { label: "Job applications", aim: 5 },
-    build: { label: "Technical work", minutes: 60 },
+    apply: { label: "Work", aim: 5 },
+    build: { label: "Personal", minutes: 60 },
     movement: { label: "Movement", minutes: 25 },
   },
   ambitious: {
     exercise: { label: "Exercise", minutes: 45 },
     study: { label: "Study", minutes: 90 },
-    apply: { label: "Job applications", aim: 8 },
-    build: { label: "Technical work", minutes: 90 },
+    apply: { label: "Work", aim: 8 },
+    build: { label: "Personal", minutes: 90 },
     movement: { label: "Movement", minutes: 30 },
   },
 };
@@ -149,12 +149,12 @@ export const DAY_RULES: Record<number, DayRule> = {
   5: {
     name: "Friday",
     required: ["exercise", "apply"],
-    note: "Lighter study day — keep the applications moving.",
+    note: "Lighter study day. Keep the momentum going on everything else.",
   },
   6: {
     name: "Saturday",
     required: ["exercise"],
-    note: "Longer session day: extra study/technical work, plus proper leisure.",
+    note: "Longer session day: extra study or personal time, plus proper leisure.",
   },
 };
 

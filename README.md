@@ -1,6 +1,6 @@
 # The Lock-In
 
-A habit tracker for a gym / study / job-search reset: accounts, per-user intensity ("how much are you actually investing right now"), a personalized daily plan, and a streak view with a 14/30/90-day filter.
+A habit tracker for a personal reset: accounts, per-user intensity ("how much are you actually investing right now"), a personalized daily plan, and a streak view with a 14/30/90-day filter.
 
 Built with Next.js (App Router), Prisma + Postgres, and NextAuth (Credentials).
 

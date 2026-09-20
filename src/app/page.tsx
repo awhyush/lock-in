@@ -33,10 +33,10 @@ export default async function Home() {
       <section className="flex flex-col gap-5">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted">Daily reset tracker</p>
         <h1 className="max-w-xl font-display text-5xl font-extrabold leading-[0.95] tracking-wide text-balance">
-          Lock in on the gym, the job search, and the study grind.
+          Lock in on the things that matter to you.
         </h1>
         <p className="max-w-md text-[15px] leading-relaxed text-muted">
-          Pick a plan, check off five habits a day, and see a real streak instead of good intentions.
+          Pick a plan, check off five habits a day, and build a real streak instead of relying on good intentions.
         </p>
         <div className="flex items-center gap-3">
           <Link
@@ -54,9 +54,9 @@ export default async function Home() {
       <section className="flex flex-col gap-4">
         <ol className="flex flex-col gap-3">
           {[
-            { title: "Pick your plan", body: "A recommended preset, or set your own minutes per habit." },
+            { title: "Pick your plan", body: "Choose a recommended preset, or set your own minutes for each habit." },
             { title: "Check off today", body: "Five habits, weekday-aware. Hit the minimum and the day still counts." },
-            { title: "Watch the streak", body: "A 14/30/90-day view per habit, plus a running streak count." },
+            { title: "Watch the streak", body: "See your progress across 14/30/90 days and keep your streak alive." },
           ].map((step, i) => (
             <li key={step.title} className="flex gap-4 rounded-xl border border-line bg-surface p-4">
               <span className="font-mono text-lg font-semibold text-accent tabular-nums">{i + 1}</span>
