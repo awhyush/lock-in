@@ -36,9 +36,7 @@ export default async function Home() {
           Lock in on the gym, the job search, and the study grind.
         </h1>
         <p className="max-w-md text-[15px] leading-relaxed text-muted">
-          Pick a plan, then check off five habits a day. The rules adjust to your week — Friday's lighter,
-          Saturday's just exercise, Sunday is recovery and planning. A streak and a history view show
-          whether you&apos;re actually doing it, not just meaning to.
+          Pick a plan, check off five habits a day, and see a real streak instead of good intentions.
         </p>
         <div className="flex items-center gap-3">
           <Link
@@ -51,20 +49,9 @@ export default async function Home() {
             Sign in
           </Link>
         </div>
-        <div className="flex flex-wrap gap-2 pt-1">
-          {HABIT_KEYS.map((key) => (
-            <span
-              key={key}
-              className="rounded-full border border-line px-3 py-1 font-mono text-[11px] uppercase tracking-wide text-muted"
-            >
-              {HABIT_LABELS[key]}
-            </span>
-          ))}
-        </div>
       </section>
 
       <section className="flex flex-col gap-4">
-        <p className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted">How it works</p>
         <ol className="flex flex-col gap-3">
           {[
             { title: "Pick your plan", body: "A recommended preset, or set your own minutes per habit." },
@@ -80,10 +67,19 @@ export default async function Home() {
             </li>
           ))}
         </ol>
+        <div className="flex flex-wrap gap-2">
+          {HABIT_KEYS.map((key) => (
+            <span
+              key={key}
+              className="rounded-full border border-line px-3 py-1 font-mono text-[11px] uppercase tracking-wide text-muted"
+            >
+              {HABIT_LABELS[key]}
+            </span>
+          ))}
+        </div>
       </section>
 
       <section className="flex flex-col gap-4">
-        <p className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Plans</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {PLAN_MODES.map((mode) => (
             <div key={mode} className="rounded-xl border border-line bg-surface p-4">

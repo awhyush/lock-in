@@ -24,7 +24,7 @@ export const PLAN_INFO: Record<PlanMode, { title: string; description: string }>
   },
   custom: {
     title: "Custom",
-    description: "Set your own minutes for each habit — how much time are you actually willing to spend on yourself?",
+    description: "Set your own minutes for each habit: how much time are you actually willing to spend on yourself?",
   },
 };
 
