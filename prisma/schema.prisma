@@ -9,15 +9,38 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  passwordHash  String
-  intensity     String    @default("standard")
-  customTargets String?
-  onboarded     Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  checkIns      CheckIn[]
+  id                String         @id @default(cuid())
+  name              String
+  email             String         @unique
+  passwordHash      String
+  intensity         String         @default("standard")
+  customTargets     String?
+  onboarded         Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  checkIns          CheckIn[]
+  ownedCircles      Circle[]       @relation("OwnedCircles")
+  circleMemberships CircleMember[]
+}
+
+model Circle {
+  id         String         @id @default(cuid())
+  name       String
+  inviteCode String         @unique
+  ownerId    String
+  owner      User           @relation("OwnedCircles", fields: [ownerId], references: [id], onDelete: Cascade)
+  members    CircleMember[]
+  createdAt  DateTime       @default(now())
+}
+
+model CircleMember {
+  id       String   @id @default(cuid())
+  circleId String
+  circle   Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  @@unique([circleId, userId])
 }
 
 model RateLimitHit {

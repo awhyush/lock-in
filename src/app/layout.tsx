@@ -3,6 +3,7 @@ import { Big_Shoulders, Public_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, THEME_COLOR_DARK, THEME_COLOR_LIGHT } from "@/lib/site";
 import { ThemeProvider } from "next-themes";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 const display = Big_Shoulders({
   variable: "--font-display",
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
           {children}
+          <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>

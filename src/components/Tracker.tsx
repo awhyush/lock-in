@@ -126,6 +126,12 @@ export function Tracker({
           </div>
           <div className="flex items-center gap-3">
             <Link
+              href="/circles"
+              className="font-mono text-[11px] uppercase tracking-wide text-muted underline underline-offset-2"
+            >
+              Circles
+            </Link>
+            <Link
               href="/settings"
               className="font-mono text-[11px] uppercase tracking-wide text-muted underline underline-offset-2"
             >

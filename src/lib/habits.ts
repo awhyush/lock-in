@@ -236,3 +236,21 @@ export function computeStreak(historyByDate: Record<string, CheckInData>, today:
   }
   return streak;
 }
+
+/** Percent of the last 7 days that were fully complete, counting only days that actually
+ * required something (a light Sunday doesn't help or hurt the score). Null if nothing in
+ * the window was eligible. */
+export function computeWeekCompletion(historyByDate: Record<string, CheckInData>, today: Date): number | null {
+  let eligible = 0;
+  let completed = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay());
+    if (complete === null) continue;
+    eligible++;
+    if (complete) completed++;
+  }
+  if (eligible === 0) return null;
+  return Math.round((completed / eligible) * 100);
+}

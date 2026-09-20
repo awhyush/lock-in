@@ -7,7 +7,10 @@ export default auth((req) => {
 
   const isAuthPage = pathname === "/login" || pathname === "/signup";
   const isProtected =
-    pathname.startsWith("/dashboard") || pathname === "/onboarding" || pathname === "/settings";
+    pathname.startsWith("/dashboard") ||
+    pathname === "/onboarding" ||
+    pathname === "/settings" ||
+    pathname.startsWith("/circles");
 
   if (!isLoggedIn && isProtected) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
@@ -21,5 +24,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/signup", "/onboarding", "/settings"],
+  matcher: ["/dashboard/:path*", "/login", "/signup", "/onboarding", "/settings", "/circles/:path*"],
 };
