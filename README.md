@@ -10,7 +10,7 @@ Needs a Postgres database — [neon.tech](https://neon.tech) has a free tier and
 
 ```bash
 npm install
-cp .env.example .env   # fill in DATABASE_URL, DIRECT_URL, AUTH_SECRET
+cp .env.example .env   # fill in DATABASE_URL, DATABASE_URL_UNPOOLED, AUTH_SECRET
 npx prisma migrate dev   # first time only, creates the schema
 npm run dev
 ```
@@ -26,7 +26,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Deploying (Vercel)
 
 1. [vercel.com](https://vercel.com) → **Add New → Project** → import this GitHub repo.
-2. In the project's **Storage** tab, **Create Database → Neon (Postgres)**. Vercel provisions it and auto-injects `DATABASE_URL`/`DIRECT_URL` (or similarly named vars — check they match what `prisma/schema.prisma` reads; rename in Project Settings → Environment Variables if not) into the project's environment variables.
+2. In the project's **Storage** tab, **Create Database → Neon (Postgres)**, connecting it to at least Production. Vercel provisions it and auto-injects a batch of env vars, including `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` (direct) — these two are what `prisma/schema.prisma` reads. If a future integration version names the unpooled one differently, update `directUrl = env("...")` in the schema to match rather than renaming the var.
 3. Add the rest of the environment variables (Settings → Environment Variables):
    - `AUTH_SECRET` — generate a fresh one, don't reuse your local `.env`'s value: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
    - `NEXT_PUBLIC_SITE_URL` — your Vercel deployment URL (e.g. `https://lock-in.vercel.app`); you can add this after the first deploy once you know the URL, then redeploy
