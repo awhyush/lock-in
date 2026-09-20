@@ -1,0 +1,619 @@
+<title>The Lock-In</title>
+<meta name="description" content="Daily habit tracker for the gym / study / job-search reset.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@600;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --ground:#f5f2ec;
+    --surface:#ffffff;
+    --surface-2:#ececE3;
+    --ink:#1b1d22;
+    --muted:#6b6e77;
+    --accent:#e85c2b;
+    --accent-ink:#ffffff;
+    --good:#2f9e5c;
+    --good-bg:#e3f3e8;
+    --warn:#b9862a;
+    --warn-bg:#f7ecd6;
+    --line:rgba(0,0,0,0.09);
+    --shadow:rgba(20,16,10,0.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#15171c;
+      --surface:#1e2129;
+      --surface-2:#262a34;
+      --ink:#eae7e0;
+      --muted:#9a9da6;
+      --accent:#ff7a45;
+      --accent-ink:#1b1000;
+      --good:#4fb477;
+      --good-bg:#1c3327;
+      --warn:#e8b74d;
+      --warn-bg:#382c14;
+      --line:rgba(255,255,255,0.09);
+      --shadow:rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#15171c;
+    --surface:#1e2129;
+    --surface-2:#262a34;
+    --ink:#eae7e0;
+    --muted:#9a9da6;
+    --accent:#ff7a45;
+    --accent-ink:#1b1000;
+    --good:#4fb477;
+    --good-bg:#1c3327;
+    --warn:#e8b74d;
+    --warn-bg:#382c14;
+    --line:rgba(255,255,255,0.09);
+    --shadow:rgba(0,0,0,0.4);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"Public Sans",system-ui,sans-serif;
+    padding-inline:16px;
+    padding-block:28px 48px;
+    display:flex;
+    justify-content:center;
+  }
+  .page{
+    width:100%;
+    max-width:560px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  h1{
+    font-family:"Big Shoulders",sans-serif;
+    font-weight:800;
+    font-size:44px;
+    line-height:0.9;
+    letter-spacing:0.01em;
+    margin:2px 0 0;
+    text-wrap:balance;
+  }
+  .streak{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:2px;
+    min-width:84px;
+    text-align:right;
+  }
+  .streak-num{
+    font-family:"IBM Plex Mono",monospace;
+    font-weight:600;
+    font-size:30px;
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+    line-height:1;
+  }
+  .streak-label{
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:0.04em;
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    box-shadow:0 1px 2px var(--shadow);
+  }
+
+  .day-note{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    background:var(--surface-2);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:14px;
+    font-size:13.5px;
+    color:var(--ink);
+  }
+  .day-note b{ color:var(--accent); }
+
+  .habit-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .habit{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    cursor:pointer;
+    user-select:none;
+    transition:background .15s, border-color .15s;
+  }
+  .habit:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .habit[data-done="true"]{
+    background:var(--good-bg);
+    border-color:transparent;
+  }
+  .habit[data-required="false"]{
+    opacity:0.82;
+  }
+  .check{
+    width:24px;height:24px;
+    flex:0 0 auto;
+    border-radius:7px;
+    border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    background:var(--surface-2);
+    transition:background .15s, border-color .15s;
+  }
+  .habit[data-done="true"] .check{
+    background:var(--good);
+    border-color:var(--good);
+  }
+  .check svg{ width:14px;height:14px; opacity:0; transition:opacity .1s; }
+  .habit[data-done="true"] .check svg{ opacity:1; }
+
+  .habit-text{ flex:1; min-width:0; }
+  .habit-label{ font-weight:600; font-size:15px; }
+  .habit-target{ font-size:12px; color:var(--muted); margin-top:1px; }
+  .req-pill{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--muted);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:2px 7px;
+    flex:0 0 auto;
+  }
+
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:0 0 auto;
+  }
+  .stepper button{
+    width:26px;height:26px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+  }
+  .stepper button:active{ transform:scale(0.94); }
+  .stepper-val{
+    font-family:"IBM Plex Mono",monospace;
+    font-weight:600;
+    min-width:16px;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .bonus-row{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px dashed var(--line);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:13px;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .bonus-row .check{ width:20px;height:20px; }
+  .bonus-row[data-done="true"]{ color:var(--ink); }
+  .bonus-row[data-done="true"] .check{ background:var(--warn); border-color:var(--warn); }
+  .bonus-row .check svg{ width:12px;height:12px; }
+
+  .section-title{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:2px 2px 10px;
+  }
+
+  .strip-row{
+    display:grid;
+    grid-template-columns:88px 1fr;
+    align-items:center;
+    gap:10px;
+    padding:6px 0;
+  }
+  .strip-name{ font-size:12.5px; color:var(--muted); }
+  .strip-cells{
+    display:grid;
+    grid-template-columns:repeat(14,1fr);
+    gap:4px;
+  }
+  .cell{
+    aspect-ratio:1;
+    border-radius:4px;
+    background:var(--surface-2);
+  }
+  .cell[data-state="done"]{ background:var(--good); }
+  .cell[data-state="partial"]{ background:var(--warn); }
+  .cell[data-state="today"]{ box-shadow:0 0 0 2px var(--accent) inset; }
+  .strip-days{
+    display:grid;
+    grid-template-columns:88px 1fr;
+    gap:10px;
+    margin-bottom:4px;
+  }
+  .strip-days-cells{
+    display:grid;
+    grid-template-columns:repeat(14,1fr);
+    gap:4px;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:9px;
+    color:var(--muted);
+    text-align:center;
+  }
+
+  details{ border-top:1px solid var(--line); }
+  details:first-of-type{ border-top:none; }
+  summary{
+    padding:12px 2px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:600;
+    font-size:14px;
+    list-style:none;
+  }
+  summary::-webkit-details-marker{ display:none; }
+  summary .arrow{ color:var(--muted); transition:transform .15s; font-size:12px; }
+  details[open] summary .arrow{ transform:rotate(90deg); }
+  .schedule-body{
+    padding:0 2px 14px;
+    font-size:13.5px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .schedule-body b{ color:var(--ink); }
+
+  .footnote{
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    padding:4px 12px 0;
+  }
+  .status-line{
+    font-size:11px;
+    color:var(--muted);
+    text-align:center;
+    font-family:"IBM Plex Mono",monospace;
+  }
+</style>
+
+<div class="page">
+  <header>
+    <div>
+      <div class="eyebrow" id="dateLabel">—</div>
+      <h1>THE LOCK‑IN</h1>
+    </div>
+    <div class="streak">
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-label">day streak</div>
+    </div>
+  </header>
+
+  <div class="card" id="todayCard">
+    <div class="section-title">Today</div>
+    <div class="day-note" id="dayNote" hidden></div>
+    <div class="habit-list" id="habitList"></div>
+    <div class="bonus-row" id="noNapRow" data-done="false" tabindex="0" role="button">
+      <div class="check"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span>Didn't lie down when I got home</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Last 14 days</div>
+    <div class="strip-days"><div></div><div class="strip-days-cells" id="stripDays"></div></div>
+    <div id="stripRows"></div>
+  </div>
+
+  <div class="card" id="scheduleCard">
+    <div class="section-title">Weekly plan</div>
+  </div>
+
+  <div class="footnote">If you only hit the minimum today, the day still counts.</div>
+  <div class="status-line" id="statusLine">connecting…</div>
+</div>
+
+<script>
+(function(){
+  const HABITS = [
+    { key:'exercise', label:'Exercise', target:'30 min minimum' },
+    { key:'study',    label:'Study / DSA', target:'60 min minimum' },
+    { key:'apply',    label:'Job applications', target:'45 min · aim for 5', isCount:true },
+    { key:'build',    label:'Technical work', target:'60 min minimum' },
+    { key:'movement', label:'Movement', target:'20–30 min' },
+  ];
+
+  // weekday index: 0 = Sunday .. 6 = Saturday
+  const DAY_RULES = {
+    0: { name:'Sunday',    required:[],                               note:'Recovery + weekly planning. Light study only, no pressure.' },
+    1: { name:'Monday',    required:['exercise','study','apply','build'], note:null },
+    2: { name:'Tuesday',   required:['exercise','movement'],          note:'Football 8–9 PM covers today’s movement — no serious studying tonight.' },
+    3: { name:'Wednesday', required:['exercise','study','apply','build'], note:null },
+    4: { name:'Thursday',  required:['exercise','study','apply','build'], note:null },
+    5: { name:'Friday',    required:['exercise','apply'],             note:'Lighter study day — keep the applications moving.' },
+    6: { name:'Saturday',  required:['exercise'],                     note:'Longer session day: extra study/technical work, plus proper leisure.' },
+  };
+
+  const SCHEDULE = [
+    { name:'Monday / Wednesday / Thursday', lines:['7:15 wake, 7:30–8:30 gym', '7:30–9:00 PM study / DSA', 'Applications squeezed in after work or before study', 'Bed ~11:00–11:30'] },
+    { name:'Tuesday', lines:['Normal workday', 'Football 8–9 PM (home ~10 PM)', 'Dinner, shower, no serious study', 'Sleep'] },
+    { name:'Friday', lines:['Lighter study block', 'Applications still happen', 'PC / social time in the evening'] },
+    { name:'Saturday', lines:['Longer study / technical work session', 'Job applications', 'Gym or football, proper leisure time'] },
+    { name:'Sunday', lines:['Recovery', 'Weekly review + planning', 'Some light studying', 'Prep for Monday'] },
+  ];
+
+  const $ = (s,r=document) => r.querySelector(s);
+  const pad = n => String(n).padStart(2,'0');
+  const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const todayDate = new Date();
+  const todayKey = dateKey(todayDate);
+
+  $('#dateLabel').textContent = todayDate.toLocaleDateString(undefined,{ weekday:'long', month:'short', day:'numeric' });
+
+  const rule = DAY_RULES[todayDate.getDay()];
+  const dayNoteEl = $('#dayNote');
+  if (rule.note){
+    dayNoteEl.hidden = false;
+    dayNoteEl.innerHTML = `<span><b>${rule.name}.</b> ${rule.note}</span>`;
+  }
+
+  const habitList = $('#habitList');
+  HABITS.forEach(h => {
+    const required = rule.required.includes(h.key);
+    const row = document.createElement('div');
+    row.className = 'habit';
+    row.dataset.key = h.key;
+    row.dataset.required = required;
+    row.dataset.done = 'false';
+    row.tabIndex = 0;
+    row.setAttribute('role','button');
+    row.innerHTML = `
+      <div class="check"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="habit-text">
+        <div class="habit-label">${h.label}</div>
+        <div class="habit-target">${h.target}</div>
+      </div>
+      ${h.isCount ? '' : `<span class="req-pill">${required ? 'core' : 'bonus'}</span>`}
+    `;
+    if (h.isCount){
+      const stepper = document.createElement('div');
+      stepper.className = 'stepper';
+      stepper.innerHTML = `<button type="button" data-step="-1" aria-label="decrease">–</button><span class="stepper-val" data-val="0">0</span><button type="button" data-step="1" aria-label="increase">+</button>`;
+      row.appendChild(stepper);
+    }
+    habitList.appendChild(row);
+  });
+
+  // schedule accordion
+  const scheduleCard = $('#scheduleCard');
+  SCHEDULE.forEach(s => {
+    const d = document.createElement('details');
+    d.innerHTML = `<summary>${s.name}<span class="arrow">▸</span></summary>
+      <div class="schedule-body">${s.lines.map(l=>`<div>${l}</div>`).join('')}</div>`;
+    scheduleCard.appendChild(d);
+  });
+
+  // history strip skeleton (14 days ending today)
+  const stripDays = $('#stripDays');
+  const stripRows = $('#stripRows');
+  const days = [];
+  for (let i = 13; i >= 0; i--){
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    days.push(d);
+  }
+  days.forEach(d => {
+    const el = document.createElement('div');
+    el.textContent = d.toLocaleDateString(undefined,{ weekday:'narrow' });
+    stripDays.appendChild(el);
+  });
+
+  const stripEls = {}; // key -> array of cell elements
+  ['exercise','study','apply','build','movement'].forEach(key => {
+    const label = HABITS.find(h=>h.key===key).label;
+    const row = document.createElement('div');
+    row.className = 'strip-row';
+    row.innerHTML = `<div class="strip-name">${label}</div><div class="strip-cells" data-key="${key}"></div>`;
+    stripRows.appendChild(row);
+    const cellsEl = row.querySelector('.strip-cells');
+    stripEls[key] = days.map(d => {
+      const c = document.createElement('div');
+      c.className = 'cell';
+      if (dateKey(d) === todayKey) c.dataset.state = 'today';
+      cellsEl.appendChild(c);
+      return c;
+    });
+  });
+
+  function dayComplete(data, weekday){
+    const req = (DAY_RULES[weekday] || DAY_RULES[1]).required;
+    if (!data) return req.length === 0 ? null : false;
+    return req.every(k => k === 'apply' ? (data.apply||0) >= 1 : !!data[k]);
+  }
+
+  function paintStrip(historyByKey /* dateKey -> data */){
+    days.forEach((d, i) => {
+      const key = dateKey(d);
+      const data = historyByKey[key];
+      ['exercise','study','apply','build','movement'].forEach(habitKey => {
+        const cell = stripEls[habitKey][i];
+        let state = 'empty';
+        if (data){
+          const done = habitKey === 'apply' ? (data.apply||0) >= 1 : !!data[habitKey];
+          const required = (DAY_RULES[d.getDay()] || DAY_RULES[1]).required.includes(habitKey);
+          if (done) state = 'done';
+          else if (!required) state = null;
+        }
+        if (state && state !== 'empty') cell.dataset.state = dateKey(d) === todayKey ? 'today' : state;
+        else if (dateKey(d) === todayKey) cell.dataset.state = 'today';
+        else delete cell.dataset.state;
+      });
+    });
+  }
+
+  function computeStreak(historyByKey){
+    let streak = 0;
+    for (let i = 0; i < 60; i++){
+      const d = new Date(todayDate);
+      d.setDate(d.getDate() - i);
+      const key = dateKey(d);
+      const complete = dayComplete(historyByKey[key], d.getDay());
+      if (complete === false) break;
+      if (complete === true) streak++;
+      // null (no required habits that day, e.g. Sunday with nothing logged) doesn't break the streak but doesn't add to it either
+      if (i === 0 && complete !== true) {
+        // today not finished yet — don't count it, but don't break on it
+        continue;
+      }
+    }
+    return streak;
+  }
+
+  const statusLine = $('#statusLine');
+  let db = null;
+  let todayData = {};
+  const historyByKey = {};
+
+  function renderToday(){
+    HABITS.forEach(h => {
+      const row = habitList.querySelector(`[data-key="${h.key}"]`);
+      if (!row) return;
+      if (h.isCount){
+        const n = todayData[h.key] || 0;
+        row.querySelector('.stepper-val').textContent = n;
+        row.dataset.done = n >= 1 ? 'true' : 'false';
+      } else {
+        row.dataset.done = !!todayData[h.key];
+      }
+    });
+    const bonusRow = $('#noNapRow');
+    bonusRow.dataset.done = !!todayData.noNap;
+    historyByKey[todayKey] = todayData;
+    paintStrip(historyByKey);
+    $('#streakNum').textContent = computeStreak(historyByKey);
+  }
+
+  async function persist(){
+    if (!db){ renderToday(); return; }
+    try {
+      await db.doc('days/' + todayKey).set({ ...todayData, updatedAt: new Date().toISOString() });
+    } catch (e) {
+      statusLine.textContent = 'not saved — ' + (e && e.code ? e.code : 'error');
+    }
+  }
+
+  habitList.addEventListener('click', e => {
+    const stepBtn = e.target.closest('[data-step]');
+    const row = e.target.closest('.habit');
+    if (!row) return;
+    const key = row.dataset.key;
+    const habit = HABITS.find(h => h.key === key);
+    if (stepBtn){
+      e.stopPropagation();
+      const dir = Number(stepBtn.dataset.step);
+      todayData[key] = Math.max(0, (todayData[key]||0) + dir);
+    } else if (habit.isCount){
+      return;
+    } else {
+      todayData[key] = !todayData[key];
+    }
+    renderToday();
+    persist();
+  });
+  habitList.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' '){
+      const row = e.target.closest('.habit');
+      if (row && !HABITS.find(h=>h.key===row.dataset.key).isCount){
+        e.preventDefault();
+        row.click();
+      }
+    }
+  });
+
+  const bonusRow = $('#noNapRow');
+  function toggleBonus(){
+    todayData.noNap = !todayData.noNap;
+    renderToday();
+    persist();
+  }
+  bonusRow.addEventListener('click', toggleBonus);
+  bonusRow.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleBonus(); }
+  });
+
+  renderToday();
+
+  if (typeof window.claude === 'undefined' || !window.claude.use){
+    statusLine.textContent = 'local file — open the claude.ai artifact to save progress across devices';
+    return;
+  }
+
+  window.claude.use('db').then(handle => {
+    db = handle;
+    if (!db){
+      statusLine.textContent = 'open on claude.ai signed in to save progress across devices';
+      return;
+    }
+    statusLine.textContent = '';
+
+    db.doc('days/' + todayKey).onSnapshot(snap => {
+      todayData = snap.exists ? { ...snap.data() } : {};
+      renderToday();
+    }, err => {
+      statusLine.textContent = 'sync error — ' + err.code;
+    });
+
+    db.collection('days')
+      .limit(400)
+      .get()
+      .then(qs => {
+        qs.docs.forEach(d => { if (d.id !== todayKey) historyByKey[d.id] = d.data(); });
+        renderToday();
+      })
+      .catch(() => {});
+
+    db.collection('days').onSnapshot(qs => {
+      qs.docs.forEach(d => { if (d.id !== todayKey) historyByKey[d.id] = d.data(); });
+      renderToday();
+    }, () => {});
+  });
+})();
+</script>
