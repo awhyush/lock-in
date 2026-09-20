@@ -57,7 +57,7 @@ export const DEFAULT_CUSTOM_TARGETS: CustomTargets = {
 
 export const HABIT_LABELS: Record<HabitKey, string> = {
   exercise: "Exercise",
-  study: "Study / DSA",
+  study: "Study",
   apply: "Job applications",
   build: "Technical work",
   movement: "Movement",
@@ -82,21 +82,21 @@ export function resolveTargets(mode: PlanMode, custom: CustomTargets | null): Re
 export const HABIT_TARGETS: Record<Preset, Record<HabitKey, HabitTarget>> = {
   light: {
     exercise: { label: "Exercise", minutes: 20 },
-    study: { label: "Study / DSA", minutes: 30 },
+    study: { label: "Study", minutes: 30 },
     apply: { label: "Job applications", aim: 3 },
     build: { label: "Technical work", minutes: 30 },
     movement: { label: "Movement", minutes: 15 },
   },
   standard: {
     exercise: { label: "Exercise", minutes: 30 },
-    study: { label: "Study / DSA", minutes: 60 },
+    study: { label: "Study", minutes: 60 },
     apply: { label: "Job applications", aim: 5 },
     build: { label: "Technical work", minutes: 60 },
     movement: { label: "Movement", minutes: 25 },
   },
   ambitious: {
     exercise: { label: "Exercise", minutes: 45 },
-    study: { label: "Study / DSA", minutes: 90 },
+    study: { label: "Study", minutes: 90 },
     apply: { label: "Job applications", aim: 8 },
     build: { label: "Technical work", minutes: 90 },
     movement: { label: "Movement", minutes: 30 },
@@ -146,7 +146,7 @@ export const DAY_RULES: Record<number, DayRule> = {
   2: {
     name: "Tuesday",
     required: ["exercise", "movement"],
-    note: "Football covers today’s movement — no serious studying tonight.",
+    note: "Sport night covers today’s movement — no serious studying tonight.",
   },
   3: { name: "Wednesday", required: ["exercise", "study", "apply", "build"], note: null },
   4: { name: "Thursday", required: ["exercise", "study", "apply", "build"], note: null },
@@ -165,14 +165,14 @@ export const DAY_RULES: Record<number, DayRule> = {
 export const SCHEDULE = [
   {
     name: "Monday / Wednesday / Thursday",
-    lines: ["Gym in the morning", "Study / DSA block", "Applications squeezed in around work", "Consistent bedtime"],
+    lines: ["Gym in the morning", "Study block", "Applications squeezed in around work", "Consistent bedtime"],
   },
   {
     name: "Tuesday",
-    lines: ["Normal workday", "Football in the evening", "Dinner, shower, no serious study", "Sleep"],
+    lines: ["Normal workday", "Sport in the evening", "Dinner, shower, no serious study", "Sleep"],
   },
   { name: "Friday", lines: ["Lighter study block", "Applications still happen", "PC / social time in the evening"] },
-  { name: "Saturday", lines: ["Longer study / technical work session", "Job applications", "Gym or football, proper leisure time"] },
+  { name: "Saturday", lines: ["Longer study / technical work session", "Job applications", "Gym or sport, proper leisure time"] },
   { name: "Sunday", lines: ["Recovery", "Weekly review + planning", "Some light studying", "Prep for Monday"] },
 ];
 
@@ -184,6 +184,14 @@ export type CheckInData = {
   movement: boolean;
   noNap: boolean;
 };
+
+/** How many days of history the dashboard fetches up front — covers streak accuracy for
+ * realistically everyone without a client round-trip. The visible strip can start narrower
+ * (see HISTORY_RANGE_OPTIONS) and only fetches more if the user asks for a wider window. */
+export const DEFAULT_HISTORY_DAYS = 60;
+export const STREAK_LOOKBACK_DAYS = 400;
+export const MAX_HISTORY_DAYS = 400;
+export const HISTORY_RANGE_OPTIONS = [14, 30, 90] as const;
 
 export const EMPTY_CHECKIN: CheckInData = {
   exercise: false,
@@ -217,7 +225,7 @@ export function dayComplete(data: CheckInData | undefined, weekday: number): boo
 
 export function computeStreak(historyByDate: Record<string, CheckInData>, today: Date): number {
   let streak = 0;
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < STREAK_LOOKBACK_DAYS; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     const complete = dayComplete(historyByDate[dateKey(d)], d.getDay());

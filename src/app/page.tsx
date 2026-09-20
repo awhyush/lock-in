@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { HABIT_KEYS, HABIT_LABELS, PLAN_MODES, PLAN_INFO } from "@/lib/habits";
 import { SITE_DESCRIPTION } from "@/lib/site";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
@@ -25,6 +26,7 @@ export default async function Home() {
           <Link href="/signup" className="rounded-lg bg-accent px-3.5 py-1.5 font-semibold text-accent-ink">
             Create account
           </Link>
+          <ThemeToggle />
         </div>
       </nav>
 
@@ -34,8 +36,8 @@ export default async function Home() {
           Lock in on the gym, the job search, and the study grind.
         </h1>
         <p className="max-w-md text-[15px] leading-relaxed text-muted">
-          Pick a plan, then check off five habits a day. The rules adjust to your week — a Tuesday football
-          night counts as movement, Sunday is just recovery and planning. A streak and a 14-day view show
+          Pick a plan, then check off five habits a day. The rules adjust to your week — a Tuesday sport
+          night counts as movement, Sunday is just recovery and planning. A streak and a history view show
           whether you&apos;re actually doing it, not just meaning to.
         </p>
         <div className="flex items-center gap-3">
@@ -67,7 +69,7 @@ export default async function Home() {
           {[
             { title: "Pick your plan", body: "A recommended preset, or set your own minutes per habit." },
             { title: "Check off today", body: "Five habits, weekday-aware. Hit the minimum and the day still counts." },
-            { title: "Watch the streak", body: "A rolling 14-day view per habit, plus a running streak count." },
+            { title: "Watch the streak", body: "A 14/30/90-day view per habit, plus a running streak count." },
           ].map((step, i) => (
             <li key={step.title} className="flex gap-4 rounded-xl border border-line bg-surface p-4">
               <span className="font-mono text-lg font-semibold text-accent tabular-nums">{i + 1}</span>

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Tracker } from "@/components/Tracker";
-import { dateKey, parseStoredPlan, resolveTargets, type CheckInData } from "@/lib/habits";
+import { DEFAULT_HISTORY_DAYS, dateKey, parseStoredPlan, resolveTargets, type CheckInData } from "@/lib/habits";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   const todayKey = dateKey(today);
 
   const fromDate = new Date(today);
-  fromDate.setDate(fromDate.getDate() - 13);
+  fromDate.setDate(fromDate.getDate() - (DEFAULT_HISTORY_DAYS - 1));
   const fromKey = dateKey(fromDate);
 
   const checkIns = await prisma.checkIn.findMany({
@@ -56,6 +56,7 @@ export default async function DashboardPage() {
       todayKey={todayKey}
       todayLabel={todayLabel}
       initialHistory={history}
+      initialLoadedDays={DEFAULT_HISTORY_DAYS}
     />
   );
 }

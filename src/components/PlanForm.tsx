@@ -12,6 +12,7 @@ import {
   type HabitKey,
   type PlanMode,
 } from "@/lib/habits";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const CUSTOM_ROWS: { key: keyof CustomTargets; suffix: string }[] = [
   { key: "exercise", suffix: "min" },
@@ -59,12 +60,17 @@ export function PlanForm({
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
-        <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted">
-          {mode === "onboarding" ? `Hey ${firstName}` : "Your plan"}
-        </p>
-        <h1 className="font-display text-4xl font-extrabold leading-[0.95] tracking-wide">
-          {mode === "onboarding" ? "How much are you investing right now?" : "How much are you investing?"}
-        </h1>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted">
+              {mode === "onboarding" ? `Hey ${firstName}` : "Your plan"}
+            </p>
+            <h1 className="font-display text-4xl font-extrabold leading-[0.95] tracking-wide">
+              {mode === "onboarding" ? "How much are you investing right now?" : "How much are you investing?"}
+            </h1>
+          </div>
+          <ThemeToggle className="mt-1 flex-none" />
+        </div>
         <p className="mt-2 text-sm text-muted">
           Pick a recommended plan, or set your own minutes per habit. You can change this anytime.
         </p>

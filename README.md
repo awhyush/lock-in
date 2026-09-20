@@ -1,6 +1,6 @@
 # The Lock-In
 
-A habit tracker for a gym / study / job-search reset: accounts, per-user intensity ("how much are you actually investing right now"), a personalized daily plan, and a 14-day streak view.
+A habit tracker for a gym / study / job-search reset: accounts, per-user intensity ("how much are you actually investing right now"), a personalized daily plan, and a streak view with a 14/30/90-day filter.
 
 Built with Next.js (App Router), Prisma + Postgres, and NextAuth (Credentials).
 
@@ -21,7 +21,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 1. **Sign up** with name, email, password (hashed with bcrypt, stored in Postgres via Prisma).
 2. **Onboarding**: pick a plan — Light, Standard, Ambitious, or Custom (set your own minutes per habit) — which decides every habit's target (`src/lib/habits.ts`). Changeable anytime from `/settings`.
-3. **Dashboard**: greets you by name, shows today's habits against that day's weekday rules (e.g. Tuesday's football night counts as movement, no study expected), a running streak, and a 14-day history strip. Every tap writes straight to your account via `POST /api/checkin`.
+3. **Dashboard**: greets you by name, shows today's habits against that day's weekday rules (e.g. Tuesday's sport night counts as movement, no study expected), a running streak (computed over a real 60-day window under the hood, not just what's on screen), and a history strip you can widen to 14/30/90 days. Every tap writes straight to your account via `POST /api/checkin`.
 
 ## Deploying (Vercel)
 
@@ -36,7 +36,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - `src/lib/habits.ts` — habit/intensity/weekday config and the streak logic, shared by the server and the client.
 - `src/auth.ts` — NextAuth config (Credentials provider, JWT sessions).
-- `src/app/api/*` — signup, onboarding, and check-in endpoints.
+- `src/app/api/*` — signup, onboarding, check-in, and history (widening the strip beyond what loaded server-side) endpoints.
 - `src/app/{login,signup,onboarding,dashboard}` — the pages.
 - `src/components/Tracker.tsx` — the dashboard's interactive UI.
 - `prisma/schema.prisma` — `User` and `CheckIn` models.

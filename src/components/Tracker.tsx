@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   DAY_RULES,
   HABIT_KEYS,
+  HISTORY_RANGE_OPTIONS,
   SCHEDULE,
   computeStreak,
   dateKey,
@@ -15,6 +16,7 @@ import {
   type HabitTarget,
 } from "@/lib/habits";
 import { SignOutButton } from "@/components/SignOutButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const BOOLEAN_KEYS: Extract<HabitKey, "exercise" | "study" | "build" | "movement">[] = [
   "exercise",
@@ -29,15 +31,21 @@ export function Tracker({
   todayKey,
   todayLabel,
   initialHistory,
+  initialLoadedDays,
 }: {
   name: string;
   targets: Record<HabitKey, HabitTarget>;
   todayKey: string;
   todayLabel: string;
   initialHistory: Record<string, CheckInData>;
+  initialLoadedDays: number;
 }) {
   const [history, setHistory] = useState<Record<string, CheckInData>>(initialHistory);
   const [status, setStatus] = useState<string | null>(null);
+  const [rangeDays, setRangeDays] = useState<number>(HISTORY_RANGE_OPTIONS[0]);
+  const [loadedDays, setLoadedDays] = useState(initialLoadedDays);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const stripScrollRef = useRef<HTMLDivElement>(null);
   const firstName = name.split(" ")[0];
 
   const weekday = useMemo(() => new Date(`${todayKey}T00:00:00`).getDay(), [todayKey]);
@@ -47,15 +55,38 @@ export function Tracker({
   const days = useMemo(() => {
     const base = new Date(`${todayKey}T00:00:00`);
     const arr: { key: string; weekday: number; label: string }[] = [];
-    for (let i = 13; i >= 0; i--) {
+    for (let i = rangeDays - 1; i >= 0; i--) {
       const d = new Date(base);
       d.setDate(d.getDate() - i);
       arr.push({ key: dateKey(d), weekday: d.getDay(), label: d.toLocaleDateString("en-US", { weekday: "narrow" }) });
     }
     return arr;
-  }, [todayKey]);
+  }, [todayKey, rangeDays]);
+
+  useEffect(() => {
+    const el = stripScrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [days]);
 
   const streak = useMemo(() => computeStreak(history, new Date(`${todayKey}T00:00:00`)), [history, todayKey]);
+
+  async function selectRange(n: number) {
+    setRangeDays(n);
+    if (n <= loadedDays) return;
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/history?days=${n}`);
+      if (res.ok) {
+        const body = (await res.json()) as { history: Record<string, CheckInData> };
+        setHistory((h) => ({ ...body.history, ...h }));
+        setLoadedDays(n);
+      }
+    } catch {
+      // offline or a blip — the strip just shows what's already loaded
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
 
   async function persist(next: CheckInData) {
     setHistory((h) => ({ ...h, [todayKey]: next }));
@@ -101,6 +132,7 @@ export function Tracker({
               Edit plan
             </Link>
             <SignOutButton />
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -186,19 +218,40 @@ export function Tracker({
       </section>
 
       <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <p className="mb-2 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Last 14 days</p>
-        <div className="grid grid-cols-[92px_1fr] gap-2.5">
-          <div />
-          <div className="grid grid-cols-[repeat(14,minmax(0,1fr))] gap-1 font-mono text-[9px] text-muted">
+        <div className="mb-2 flex items-center justify-between gap-3 px-0.5">
+          <p className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted">
+            Last {rangeDays} days{historyLoading ? "…" : ""}
+          </p>
+          <div className="flex items-center gap-1">
+            {HISTORY_RANGE_OPTIONS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => selectRange(n)}
+                className={`rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide ${
+                  rangeDays === n ? "border-accent text-accent" : "border-line text-muted"
+                }`}
+              >
+                {n}d
+              </button>
+            ))}
+          </div>
+        </div>
+        <div ref={stripScrollRef} className="overflow-x-auto">
+          <div
+            className="grid w-max gap-x-1 gap-y-2"
+            style={{ gridTemplateColumns: `92px repeat(${rangeDays}, 20px)` }}
+          >
+            <div className="sticky left-0 z-10 bg-surface" />
             {days.map((d) => (
-              <div key={d.key} className="text-center">
+              <div key={d.key} className="text-center font-mono text-[9px] text-muted">
                 {d.label}
               </div>
             ))}
+            {HABIT_KEYS.map((key) => (
+              <StripRow key={key} name={targets[key].label} days={days} history={history} habitKey={key} todayKey={todayKey} />
+            ))}
           </div>
-          {HABIT_KEYS.map((key) => (
-            <FragmentRow key={key} name={targets[key].label} days={days} history={history} habitKey={key} todayKey={todayKey} />
-          ))}
         </div>
       </section>
 
@@ -245,7 +298,7 @@ function CheckIcon({ className }: { className?: string }) {
   );
 }
 
-function FragmentRow({
+function StripRow({
   name,
   days,
   history,
@@ -260,21 +313,19 @@ function FragmentRow({
 }) {
   return (
     <>
-      <div className="self-center truncate text-xs text-muted">{name}</div>
-      <div className="grid grid-cols-[repeat(14,minmax(0,1fr))] gap-1">
-        {days.map((d) => {
-          const done = habitDone(history[d.key], habitKey);
-          const isToday = d.key === todayKey;
-          return (
-            <div
-              key={d.key}
-              className={`aspect-square rounded-[4px] ${done ? "bg-good" : "bg-surface-2"} ${
-                isToday ? "ring-2 ring-inset ring-accent" : ""
-              }`}
-            />
-          );
-        })}
-      </div>
+      <div className="sticky left-0 z-10 self-center truncate bg-surface pr-2 text-xs text-muted">{name}</div>
+      {days.map((d) => {
+        const done = habitDone(history[d.key], habitKey);
+        const isToday = d.key === todayKey;
+        return (
+          <div
+            key={d.key}
+            className={`h-5 w-5 rounded-[4px] ${done ? "bg-good" : "bg-surface-2"} ${
+              isToday ? "ring-2 ring-inset ring-accent" : ""
+            }`}
+          />
+        );
+      })}
     </>
   );
 }
