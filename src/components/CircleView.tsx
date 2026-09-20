@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { dateKey } from "@/lib/habits";
 import { HabitGrid } from "@/components/HabitGrid";
+import { AppNav } from "@/components/AppNav";
 import type { CircleDetail, CircleMemberView } from "@/lib/circles";
 
 type SortMode = "streak" | "week";
@@ -42,7 +43,7 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // clipboard API unavailable — the code is still shown on screen to copy by hand
+      // clipboard API unavailable, the code is still shown on screen to copy by hand
     }
   }
 
@@ -54,69 +55,72 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
   }
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8">
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted">Circle</p>
-          <h1 className="font-display text-4xl font-extrabold leading-[0.9] tracking-wide">{circle.name}</h1>
-        </div>
-        <button
-          type="button"
-          onClick={leave}
-          disabled={leaving}
-          className="font-mono text-[11px] uppercase tracking-wide text-muted underline underline-offset-2 disabled:opacity-60"
-        >
-          Leave
-        </button>
-      </header>
+    <>
+      <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Circle</p>
+            <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">{circle.name}</h1>
+          </div>
+          <button
+            type="button"
+            onClick={leave}
+            disabled={leaving}
+            className="flex-none rounded-full border border-line px-3.5 py-1.5 text-xs font-bold text-muted disabled:opacity-60"
+          >
+            Leave
+          </button>
+        </header>
 
-      <section className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <div>
-          <p className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Invite code</p>
-          <p className="font-mono text-sm">{circle.inviteCode}</p>
-        </div>
-        <button
-          type="button"
-          onClick={copyCode}
-          className="flex-none rounded-lg border border-line px-3 py-1.5 text-xs font-semibold"
-        >
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </section>
+        <section className="flex items-center justify-between gap-3 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+          <div>
+            <p className="font-bold text-[10px] uppercase tracking-[0.14em] text-sage">Invite code</p>
+            <p className="text-sm font-bold text-ink">{circle.inviteCode}</p>
+          </div>
+          <button
+            type="button"
+            onClick={copyCode}
+            className="flex-none rounded-full border border-line px-3.5 py-1.5 text-xs font-bold text-ink"
+          >
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </section>
 
-      {notDoneToday.length > 0 && (
-        <div className="rounded-lg bg-surface-2 px-3 py-2.5 text-sm text-muted">
-          Still to go today:{" "}
-          {notDoneToday.map((m) => (m.userId === viewerId ? "you" : m.name.split(" ")[0])).join(", ")}
-        </div>
-      )}
+        {notDoneToday.length > 0 && (
+          <div className="rounded-[1.5rem] bg-sage/20 px-4 py-3 text-sm text-ink">
+            Still to go today:{" "}
+            {notDoneToday.map((m) => (m.userId === viewerId ? "you" : m.name.split(" ")[0])).join(", ")}
+          </div>
+        )}
 
-      <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between gap-3 px-0.5">
-          <p className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Members</p>
-          <div className="flex items-center gap-1">
-            {(["streak", "week"] as SortMode[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setSortMode(m)}
-                className={`rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide ${
-                  sortMode === m ? "border-accent text-accent" : "border-line text-muted"
-                }`}
-              >
-                {m === "streak" ? "Streak" : "This week"}
-              </button>
+        <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+          <div className="mb-4 flex items-center justify-between gap-3 px-0.5">
+            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Members</p>
+            <div className="flex items-center gap-1">
+              {(["streak", "week"] as SortMode[]).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setSortMode(m)}
+                  className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                    sortMode === m ? "border-accent text-accent" : "border-line text-muted"
+                  }`}
+                >
+                  {m === "streak" ? "Streak" : "This week"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-5">
+            {sortedMembers.map((m) => (
+              <MemberRow key={m.userId} member={m} days={days} todayKey={circle.todayKey} isSelf={m.userId === viewerId} />
             ))}
           </div>
-        </div>
-
-        <div className="flex flex-col gap-5">
-          {sortedMembers.map((m) => (
-            <MemberRow key={m.userId} member={m} days={days} todayKey={circle.todayKey} isSelf={m.userId === viewerId} />
-          ))}
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+      <AppNav />
+    </>
   );
 }
 
@@ -133,12 +137,12 @@ function MemberRow({
 }) {
   return (
     <div>
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-sm font-semibold">
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-sm font-bold text-ink">
           {member.name}
-          {isSelf && <span className="ml-1.5 text-xs font-normal text-muted">(you)</span>}
+          {isSelf && <span className="ml-1.5 text-xs font-medium text-muted">(you)</span>}
         </span>
-        <span className="flex items-center gap-3 font-mono text-xs text-muted">
+        <span className="flex items-center gap-3 text-xs font-bold text-muted">
           <span className="text-accent">{member.streak}d streak</span>
           {member.weekPercent != null && <span>{member.weekPercent}% this week</span>}
         </span>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PLAN_INFO, PLAN_MODES, type PlanMode } from "@/lib/habits";
 import { MAX_GOALS, MAX_GOAL_LABEL_LENGTH } from "@/lib/goals";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppNav } from "@/components/AppNav";
 
 type GoalDraft = { id: string | null; label: string };
 
@@ -59,110 +60,113 @@ export function PlanForm({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted">
-              {mode === "onboarding" ? `Hey ${firstName}` : "Your plan"}
-            </p>
-            <h1 className="font-display text-4xl font-extrabold leading-[0.95] tracking-wide">
-              {mode === "onboarding" ? "How much are you investing right now?" : "How much are you investing?"}
-            </h1>
+    <>
+      <main className={`flex min-h-screen items-center justify-center px-4 py-12 ${mode === "settings" ? "pb-32" : ""}`}>
+        <div className="w-full max-w-lg">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">
+                {mode === "onboarding" ? `Hey ${firstName}` : "Your plan"}
+              </p>
+              <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">
+                {mode === "onboarding" ? "How much are you investing right now?" : "How much are you investing?"}
+              </h1>
+            </div>
+            {mode === "onboarding" && <ThemeToggle className="mt-1 flex-none" />}
           </div>
-          <ThemeToggle className="mt-1 flex-none" />
-        </div>
-        <p className="mt-2 text-sm text-muted">
-          Pick a recommended plan, or track your own goals. You can change this anytime.
-        </p>
+          <p className="mt-2 text-sm text-muted">
+            Pick a recommended plan, or track your own goals. You can change this anytime.
+          </p>
 
-        <div className="mt-6 flex flex-col gap-3">
-          {PLAN_MODES.map((key) => {
-            const info = PLAN_INFO[key];
-            const active = selected === key;
-            return (
-              <div key={key}>
-                <button
-                  type="button"
-                  onClick={() => setSelected(key)}
-                  className={`flex w-full flex-col gap-1 rounded-xl border px-4 py-3.5 text-left transition-colors ${
-                    active ? "border-accent bg-good-bg/40" : "border-line bg-surface"
-                  }`}
-                >
-                  <span className="flex items-center gap-2 font-semibold">
-                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${active ? "bg-accent" : "bg-surface-2"}`} />
-                    {info.title}
-                  </span>
-                  <span className="text-sm text-muted">{info.description}</span>
-                </button>
+          <div className="mt-6 flex flex-col gap-3">
+            {PLAN_MODES.map((key) => {
+              const info = PLAN_INFO[key];
+              const active = selected === key;
+              return (
+                <div key={key}>
+                  <button
+                    type="button"
+                    onClick={() => setSelected(key)}
+                    className={`flex w-full flex-col gap-1 rounded-[1.5rem] border px-5 py-4 text-left transition-colors ${
+                      active ? "border-accent bg-good-bg/40" : "border-line bg-surface"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 font-bold text-ink">
+                      <span className={`inline-block h-2.5 w-2.5 rounded-full ${active ? "bg-accent" : "bg-surface-2"}`} />
+                      {info.title}
+                    </span>
+                    <span className="text-sm text-muted">{info.description}</span>
+                  </button>
 
-                {key === "custom" && active && (
-                  <div className="mt-2 flex flex-col gap-2 rounded-xl border border-line bg-surface-2 p-3.5">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={newGoalLabel}
-                        maxLength={MAX_GOAL_LABEL_LENGTH}
-                        placeholder="e.g. Read, Meditate, No sugar"
-                        onChange={(e) => setNewGoalLabel(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addGoal();
-                          }
-                        }}
-                        className="w-full rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                      />
-                      <button
-                        type="button"
-                        onClick={addGoal}
-                        disabled={!newGoalLabel.trim() || goals.length >= MAX_GOALS}
-                        className="flex-none rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink disabled:opacity-50"
-                      >
-                        Add
-                      </button>
-                    </div>
+                  {key === "custom" && active && (
+                    <div className="mt-2 flex flex-col gap-2 rounded-[1.5rem] border border-line bg-surface-2 p-4">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={newGoalLabel}
+                          maxLength={MAX_GOAL_LABEL_LENGTH}
+                          placeholder="e.g. Read, Meditate, No sugar"
+                          onChange={(e) => setNewGoalLabel(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addGoal();
+                            }
+                          }}
+                          className="w-full rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        />
+                        <button
+                          type="button"
+                          onClick={addGoal}
+                          disabled={!newGoalLabel.trim() || goals.length >= MAX_GOALS}
+                          className="flex-none rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-ink disabled:opacity-50"
+                        >
+                          Add
+                        </button>
+                      </div>
 
-                    {goals.length > 0 ? (
-                      <ul className="flex flex-col gap-1.5">
-                        {goals.map((g, i) => (
-                          <li
-                            key={g.id ?? `new-${i}`}
-                            className="flex items-center justify-between gap-2 rounded-md border border-line bg-surface px-2.5 py-1.5"
-                          >
-                            <span className="truncate text-sm text-ink">{g.label}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeGoal(i)}
-                              aria-label={`Remove ${g.label}`}
-                              className="flex-none text-muted"
+                      {goals.length > 0 ? (
+                        <ul className="flex flex-col gap-1.5">
+                          {goals.map((g, i) => (
+                            <li
+                              key={g.id ?? `new-${i}`}
+                              className="flex items-center justify-between gap-2 rounded-full border border-line bg-surface px-4 py-2"
                             >
-                              {"✕"}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="px-0.5 text-xs text-muted">Add at least one goal to track.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                              <span className="truncate text-sm text-ink">{g.label}</span>
+                              <button
+                                type="button"
+                                onClick={() => removeGoal(i)}
+                                aria-label={`Remove ${g.label}`}
+                                className="flex-none text-muted"
+                              >
+                                {"✕"}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="px-1 text-xs text-muted">Add at least one goal to track.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {error && <p className="mt-3 text-sm text-warn">{error}</p>}
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="mt-6 w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-ink disabled:opacity-60"
+          >
+            {loading ? "Saving..." : mode === "onboarding" ? "Start the reset" : "Save plan"}
+          </button>
         </div>
-
-        {error && <p className="mt-3 text-sm text-warn">{error}</p>}
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="mt-6 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-ink disabled:opacity-60"
-        >
-          {loading ? "Saving…" : mode === "onboarding" ? "Start the reset" : "Save plan"}
-        </button>
-      </div>
-    </main>
+      </main>
+      {mode === "settings" && <AppNav />}
+    </>
   );
 }

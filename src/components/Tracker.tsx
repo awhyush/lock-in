@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import {
   DAY_RULES,
   HABIT_KEYS,
   HISTORY_RANGE_OPTIONS,
   computeStreak,
+  computeWeekCompletion,
   dateKey,
   describeDayRule,
   habitDone,
@@ -15,8 +15,8 @@ import {
   type HabitKey,
   type HabitTarget,
 } from "@/lib/habits";
-import { SignOutButton } from "@/components/SignOutButton";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { Avatar } from "@/components/Avatar";
+import { AppNav } from "@/components/AppNav";
 import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
 
 const BOOLEAN_KEYS: Extract<HabitKey, "exercise" | "study" | "build" | "movement">[] = [
@@ -86,6 +86,11 @@ export function Tracker({
     [history, todayKey],
   );
 
+  const weekPercent = useMemo(
+    () => computeWeekCompletion(history, new Date(`${todayKey}T00:00:00`)),
+    [history, todayKey],
+  );
+
   async function selectRange(n: number) {
     setRangeDays(n);
     if (n <= loadedDays) return;
@@ -98,7 +103,7 @@ export function Tracker({
         setLoadedDays(n);
       }
     } catch {
-      // offline or a blip — the strip just shows what's already loaded
+      // offline or a blip, the strip just shows what's already loaded
     } finally {
       setHistoryLoading(false);
     }
@@ -112,9 +117,9 @@ export function Tracker({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: todayKey, data: next }),
       });
-      setStatus(res.ok ? null : "not saved — try again");
+      setStatus(res.ok ? null : "not saved, try again");
     } catch {
-      setStatus("offline — not saved");
+      setStatus("offline, not saved");
     }
   }
 
@@ -127,168 +132,188 @@ export function Tracker({
   }
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted">{todayLabel}</p>
-          <h1 className="font-display text-4xl font-extrabold leading-[0.9] tracking-wide">
-            HEY {firstName.toUpperCase()}
-          </h1>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="text-right">
-            <div className="font-mono text-3xl font-semibold leading-none text-accent tabular-nums">{streak}</div>
-            <div className="text-[11px] text-muted">day streak</div>
+    <>
+      <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">{todayLabel}</p>
+            <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">Hey {firstName}</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/circles"
-              className="font-mono text-[11px] uppercase tracking-wide text-muted underline underline-offset-2"
-            >
-              Circles
-            </Link>
-            <Link
-              href="/settings"
-              className="font-mono text-[11px] uppercase tracking-wide text-muted underline underline-offset-2"
-            >
-              Edit plan
-            </Link>
-            <SignOutButton />
-            <ThemeToggle />
+          <Avatar name={name} />
+        </header>
+
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sage/20" />
+
+          <p className="relative mb-4 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Today</p>
+
+          <div className="relative mb-4 grid grid-cols-2 gap-3">
+            <MetricCard label="Streak" value={`${streak}d`} />
+            <MetricCard label="This week" value={weekPercent != null ? `${weekPercent}%` : "-"} />
           </div>
-        </div>
-      </header>
 
-      <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <p className="mb-3 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Today</p>
+          <div className="relative flex flex-col gap-2">
+            {BOOLEAN_KEYS.map((key) => {
+              const done = habitDone(today, key);
+              const required = rule.required.includes(key);
+              return (
+                <FeedRow
+                  key={key}
+                  label={targets[key].label}
+                  sub={habitTargetText(targets[key])}
+                  tag={required ? "core" : "bonus"}
+                  done={done}
+                  onToggle={() => toggle(key)}
+                />
+              );
+            })}
 
-        {rule.note && (
-          <div className="mb-3 rounded-lg bg-surface-2 px-3 py-2.5 text-sm">
-            <b className="text-accent">{rule.name}.</b> {rule.note}
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2">
-          {BOOLEAN_KEYS.map((key) => {
-            const done = habitDone(today, key);
-            const required = rule.required.includes(key);
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => toggle(key)}
-                className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                  done ? "border-transparent bg-good-bg" : "border-line bg-surface"
-                }`}
-              >
-                <Check done={done} />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold">{targets[key].label}</span>
-                  <span className="block text-xs text-muted">{habitTargetText(targets[key])}</span>
-                </span>
-                <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted">
-                  {required ? "core" : "bonus"}
-                </span>
-              </button>
-            );
-          })}
-
-          <div className="flex items-center gap-3 rounded-lg border border-line bg-surface px-3 py-2.5">
-            <Check done={today.apply >= 1} />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">{targets.apply.label}</span>
-              <span className="block text-xs text-muted">{habitTargetText(targets.apply)}</span>
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                aria-label="decrease"
-                onClick={() => stepApply(-1)}
-                className="h-6 w-6 rounded-md border border-line bg-surface-2 text-sm leading-none"
-              >
-                –
-              </button>
-              <span className="min-w-4 text-center font-mono text-sm font-semibold tabular-nums">{today.apply}</span>
-              <button
-                type="button"
-                aria-label="increase"
-                onClick={() => stepApply(1)}
-                className="h-6 w-6 rounded-md border border-line bg-surface-2 text-sm leading-none"
-              >
-                +
-              </button>
+            <div className="flex items-center gap-3 rounded-[1.5rem] border border-line bg-surface px-3 py-3">
+              <IconHolder done={today.apply >= 1} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] font-bold text-ink">{targets.apply.label}</span>
+                <span className="block text-xs text-muted">{habitTargetText(targets.apply)}</span>
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="decrease"
+                  onClick={() => stepApply(-1)}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-surface-2 text-sm leading-none text-ink"
+                >
+                  -
+                </button>
+                <span className="min-w-4 text-center text-sm font-bold tabular-nums text-ink">{today.apply}</span>
+                <button
+                  type="button"
+                  aria-label="increase"
+                  onClick={() => stepApply(1)}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-surface-2 text-sm leading-none text-ink"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          type="button"
-          onClick={() => toggle("noNap")}
-          className={`mt-3 flex w-full items-center gap-2.5 border-t border-dashed border-line pt-3 text-left text-sm ${
-            today.noNap ? "text-ink" : "text-muted"
-          }`}
-        >
-          <span
-            className={`flex h-5 w-5 items-center justify-center rounded-[7px] border-2 ${
-              today.noNap ? "border-warn bg-warn" : "border-line bg-surface-2"
+          <button
+            type="button"
+            onClick={() => toggle("noNap")}
+            className={`relative mt-4 flex w-full items-center gap-2.5 border-t border-dashed border-line pt-4 text-left text-sm ${
+              today.noNap ? "text-ink" : "text-muted"
             }`}
           >
-            {today.noNap && <CheckIcon className="h-3 w-3" />}
-          </span>
-          Didn&apos;t lie down when I got home
-        </button>
-      </section>
+            <span
+              className={`flex h-5 w-5 flex-none items-center justify-center rounded-full border-2 ${
+                today.noNap ? "border-warn bg-warn" : "border-line bg-surface-2"
+              }`}
+            >
+              {today.noNap && <CheckIcon className="h-3 w-3" />}
+            </span>
+            Didn&apos;t lie down when I got home
+          </button>
 
-      <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <div className="mb-2 flex items-center justify-between gap-3 px-0.5">
-          <p className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted">
-            Last {rangeDays} days{historyLoading ? "…" : ""}
-          </p>
-          <div className="flex items-center gap-1">
-            {HISTORY_RANGE_OPTIONS.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => selectRange(n)}
-                className={`rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide ${
-                  rangeDays === n ? "border-accent text-accent" : "border-line text-muted"
-                }`}
-              >
-                {n}d
-              </button>
-            ))}
-          </div>
-        </div>
-        <HabitGrid rows={gridRows} days={days} todayKey={todayKey} scrollRef={stripScrollRef} />
-      </section>
-
-      <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <p className="mb-1 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Weekly plan</p>
-        {[0, 1, 2, 3, 4, 5, 6].map((d) => {
-          const dayRule = DAY_RULES[d];
-          return (
-            <div key={d} className="flex items-center justify-between gap-3 border-t border-line py-3 first:border-t-0">
-              <span className="text-sm font-semibold">{dayRule.name}</span>
-              <span className="text-right text-sm text-muted">{describeDayRule(dayRule)}</span>
+          {rule.note && (
+            <div className="relative mt-4 rounded-[1.5rem] bg-sage/20 px-4 py-3 text-sm text-ink">
+              <b>{rule.name}.</b> {rule.note}
             </div>
-          );
-        })}
-      </section>
+          )}
+        </section>
 
-      <p className="text-center text-xs text-muted">If you only hit the minimum today, the day still counts.</p>
-      {status && <p className="text-center font-mono text-[11px] text-warn">{status}</p>}
-    </main>
+        <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+          <div className="mb-3 flex items-center justify-between gap-3 px-0.5">
+            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">
+              Last {rangeDays} days{historyLoading ? "..." : ""}
+            </p>
+            <div className="flex items-center gap-1">
+              {HISTORY_RANGE_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => selectRange(n)}
+                  className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                    rangeDays === n ? "border-accent text-accent" : "border-line text-muted"
+                  }`}
+                >
+                  {n}d
+                </button>
+              ))}
+            </div>
+          </div>
+          <HabitGrid rows={gridRows} days={days} todayKey={todayKey} scrollRef={stripScrollRef} />
+        </section>
+
+        <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+          <p className="mb-1 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Weekly plan</p>
+          {[0, 1, 2, 3, 4, 5, 6].map((d) => {
+            const dayRule = DAY_RULES[d];
+            return (
+              <div key={d} className="flex items-center justify-between gap-3 border-t border-line py-3 first:border-t-0">
+                <span className="text-sm font-bold text-ink">{dayRule.name}</span>
+                <span className="text-right text-sm text-muted">{describeDayRule(dayRule)}</span>
+              </div>
+            );
+          })}
+        </section>
+
+        <p className="text-center text-xs text-muted">If you only hit the minimum today, the day still counts.</p>
+        {status && <p className="text-center text-[11px] font-bold text-warn">{status}</p>}
+      </main>
+      <AppNav />
+    </>
   );
 }
 
-function Check({ done }: { done: boolean }) {
+function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <span
-      className={`flex h-6 w-6 flex-none items-center justify-center rounded-[7px] border-2 ${
-        done ? "border-good bg-good" : "border-line bg-surface-2"
+    <div className="rounded-[1rem] border border-line bg-surface-2/80 p-3 backdrop-blur">
+      <p className="font-bold text-[10px] uppercase tracking-[0.14em] text-sage">{label}</p>
+      <p className="mt-1 text-2xl font-black tabular-nums text-ink">{value}</p>
+    </div>
+  );
+}
+
+function FeedRow({
+  label,
+  sub,
+  tag,
+  done,
+  onToggle,
+}: {
+  label: string;
+  sub: string;
+  tag: string;
+  done: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`flex items-center gap-3 rounded-[1.5rem] border px-3 py-3 text-left transition-colors ${
+        done ? "border-transparent bg-good-bg" : "border-line bg-surface"
       }`}
     >
-      {done && <CheckIcon className="h-3.5 w-3.5" />}
+      <IconHolder done={done} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-bold text-ink">{label}</span>
+        <span className="block text-xs text-muted">{sub}</span>
+      </span>
+      <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+        {tag}
+      </span>
+    </button>
+  );
+}
+
+function IconHolder({ done }: { done: boolean }) {
+  return (
+    <span
+      className={`flex h-9 w-9 flex-none items-center justify-center rounded-full ${
+        done ? "bg-accent" : "bg-surface-2"
+      }`}
+    >
+      {done && <CheckIcon className="h-4 w-4" />}
     </span>
   );
 }
@@ -300,4 +325,3 @@ function CheckIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-

@@ -14,12 +14,12 @@ export function AuthCard({
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-start justify-between gap-3">
           <div>
-            <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted">{eyebrow}</p>
-            <h1 className="font-display text-4xl font-extrabold leading-[0.9] tracking-wide">{title}</h1>
+            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">{eyebrow}</p>
+            <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">{title}</h1>
           </div>
           <ThemeToggle className="mt-1 flex-none" />
         </div>
-        <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm">{children}</div>
+        <div className="rounded-[2.5rem] border border-line bg-surface p-6 shadow-soft">{children}</div>
       </div>
     </main>
   );

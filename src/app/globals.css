@@ -1,52 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --ground: #f5f2ec;
+  --ground: #eeebe3;
   --surface: #ffffff;
-  --surface-2: #ecece3;
-  --ink: #1b1d22;
-  --muted: #6b6e77;
-  --accent: #e85c2b;
+  --surface-2: #f6f4ee;
+  --ink: #171e19;
+  --muted: #6b756f;
+  --accent: #ca0013;
   --accent-ink: #ffffff;
+  --sage: #b7c6c2;
   --good: #2f9e5c;
   --good-bg: #e3f3e8;
   --warn: #b9862a;
   --warn-bg: #f7ecd6;
-  --line: rgba(0, 0, 0, 0.09);
-  --shadow: rgba(20, 16, 10, 0.08);
+  --line: rgba(23, 30, 25, 0.16);
+  --shadow: rgba(23, 30, 25, 0.08);
+  --radius-card: 2.5rem;
+  --radius-nested: 1.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ground: #15171c;
-    --surface: #1e2129;
-    --surface-2: #262a34;
-    --ink: #eae7e0;
-    --muted: #9a9da6;
-    --accent: #ff7a45;
-    --accent-ink: #1b1000;
+    --ground: #171e19;
+    --surface: #1e2621;
+    --surface-2: #262f29;
+    --ink: #eeebe3;
+    --muted: #9aa6a0;
+    --accent: #ca0013;
+    --accent-ink: #ffffff;
+    --sage: #4a5a53;
     --good: #4fb477;
     --good-bg: #1c3327;
     --warn: #e8b74d;
     --warn-bg: #382c14;
-    --line: rgba(255, 255, 255, 0.09);
+    --line: rgba(183, 198, 194, 0.18);
     --shadow: rgba(0, 0, 0, 0.4);
   }
 }
 
 :root[data-theme="dark"] {
-  --ground: #15171c;
-  --surface: #1e2129;
-  --surface-2: #262a34;
-  --ink: #eae7e0;
-  --muted: #9a9da6;
-  --accent: #ff7a45;
-  --accent-ink: #1b1000;
+  --ground: #171e19;
+  --surface: #1e2621;
+  --surface-2: #262f29;
+  --ink: #eeebe3;
+  --muted: #9aa6a0;
+  --accent: #ca0013;
+  --accent-ink: #ffffff;
+  --sage: #4a5a53;
   --good: #4fb477;
   --good-bg: #1c3327;
   --warn: #e8b74d;
   --warn-bg: #382c14;
-  --line: rgba(255, 255, 255, 0.09);
+  --line: rgba(183, 198, 194, 0.18);
   --shadow: rgba(0, 0, 0, 0.4);
 }
 
@@ -58,18 +63,23 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
+  --color-sage: var(--sage);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-warn: var(--warn);
   --color-warn-bg: var(--warn-bg);
   --color-line: var(--line);
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
-  --font-mono: var(--font-mono);
+  --font-display: var(--font-nunito);
+  --font-body: var(--font-nunito);
+  --font-mono: var(--font-nunito);
 }
 
 body {
   background: var(--ground);
   color: var(--ink);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-nunito), system-ui, sans-serif;
+}
+
+.shadow-soft {
+  box-shadow: 0 20px 50px -12px var(--shadow);
 }

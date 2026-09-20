@@ -1,25 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Big_Shoulders, Public_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, THEME_COLOR_DARK, THEME_COLOR_LIGHT } from "@/lib/site";
 import { ThemeProvider } from "next-themes";
 import { InstallPrompt } from "@/components/InstallPrompt";
 
-const display = Big_Shoulders({
-  variable: "--font-display",
-  weight: ["600", "800"],
-  subsets: ["latin"],
-});
-
-const body = Public_Sans({
-  variable: "--font-body",
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-});
-
-const mono = IBM_Plex_Mono({
-  variable: "--font-mono",
-  weight: ["500", "600"],
+const nunito = Nunito({
+  variable: "--font-nunito",
+  weight: ["400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
 });
 
@@ -61,11 +49,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={`${nunito.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
           {children}

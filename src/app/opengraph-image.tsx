@@ -16,8 +16,8 @@ export default function OpengraphImage() {
           justifyContent: "center",
           gap: 28,
           padding: "0 90px",
-          background: "#15171c",
-          color: "#eae7e0",
+          background: "#171e19",
+          color: "#eeebe3",
           fontFamily: "sans-serif",
         }}
       >
@@ -27,7 +27,7 @@ export default function OpengraphImage() {
             fontSize: 22,
             letterSpacing: 6,
             textTransform: "uppercase",
-            color: "#9a9da6",
+            color: "#8a978f",
           }}
         >
           Daily reset tracker
@@ -36,14 +36,14 @@ export default function OpengraphImage() {
           style={{
             display: "flex",
             fontSize: 128,
-            fontWeight: 800,
+            fontWeight: 900,
             lineHeight: 0.95,
-            color: "#eae7e0",
+            color: "#eeebe3",
           }}
         >
           THE LOCK-IN
         </div>
-        <div style={{ display: "flex", fontSize: 30, color: "#9a9da6", maxWidth: 900 }}>{SITE_DESCRIPTION}</div>
+        <div style={{ display: "flex", fontSize: 30, color: "#8a978f", maxWidth: 900 }}>{SITE_DESCRIPTION}</div>
         <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
           {["Exercise", "Study", "Work", "Personal", "Movement"].map((label) => (
             <div
@@ -53,8 +53,8 @@ export default function OpengraphImage() {
                 fontSize: 22,
                 padding: "8px 20px",
                 borderRadius: 999,
-                border: "2px solid #ff7a45",
-                color: "#ff7a45",
+                border: "2px solid #ff3b4e",
+                color: "#ff3b4e",
               }}
             >
               {label}

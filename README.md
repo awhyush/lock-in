@@ -42,6 +42,8 @@ Open [http://localhost:3000](http://localhost:3000).
 - `src/app/api/*` — signup, onboarding (also reconciles a custom plan's goal set), check-in/goal-entries, history/goal-history, and circles endpoints.
 - `src/app/{login,signup,onboarding,dashboard,settings,circles}` — the pages.
 - `src/components/{Tracker,GoalTracker}.tsx` — the dashboard's interactive UI for preset vs. custom plans; both render `HabitGrid.tsx`, the shared sticky-column day grid also used by `CircleView.tsx`.
+- `src/components/AppNav.tsx` — the fixed floating bottom nav (Circles/Settings, theme/sign-out, and a center Dashboard FAB) shown on every authenticated page.
+- `src/app/globals.css` — the design tokens (Charcoal/Red/Sage palette, Nunito, card/nested radii, soft shadow) that drive the whole UI.
 - `prisma/schema.prisma` — `User`, `CheckIn` (preset habits), `Goal`/`GoalEntry` (custom goals), `Circle`/`CircleMember`, `RateLimitHit`.
 
 ## Origin

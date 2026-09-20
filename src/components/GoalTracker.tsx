@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { HISTORY_RANGE_OPTIONS, dateKey } from "@/lib/habits";
-import { computeGoalStreak, type GoalDayData } from "@/lib/goals";
+import { computeGoalStreak, computeGoalWeekCompletion, type GoalDayData } from "@/lib/goals";
+import { Avatar } from "@/components/Avatar";
+import { AppNav } from "@/components/AppNav";
 import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
-import { SignOutButton } from "@/components/SignOutButton";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function GoalTracker({
   name,
@@ -64,6 +63,11 @@ export function GoalTracker({
     [history, goalIds, todayKey],
   );
 
+  const weekPercent = useMemo(
+    () => computeGoalWeekCompletion(history, goalIds, new Date(`${todayKey}T00:00:00`)),
+    [history, goalIds, todayKey],
+  );
+
   async function selectRange(n: number) {
     setRangeDays(n);
     if (n <= loadedDays) return;
@@ -76,7 +80,7 @@ export function GoalTracker({
         setLoadedDays(n);
       }
     } catch {
-      // offline or a blip — the strip just shows what's already loaded
+      // offline or a blip, the strip just shows what's already loaded
     } finally {
       setHistoryLoading(false);
     }
@@ -91,102 +95,95 @@ export function GoalTracker({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ goalId, date: todayKey, done: next }),
       });
-      setStatus(res.ok ? null : "not saved — try again");
+      setStatus(res.ok ? null : "not saved, try again");
     } catch {
-      setStatus("offline — not saved");
+      setStatus("offline, not saved");
     }
   }
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-muted">{todayLabel}</p>
-          <h1 className="font-display text-4xl font-extrabold leading-[0.9] tracking-wide">
-            HEY {firstName.toUpperCase()}
-          </h1>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="text-right">
-            <div className="font-mono text-3xl font-semibold leading-none text-accent tabular-nums">{streak}</div>
-            <div className="text-[11px] text-muted">day streak</div>
+    <>
+      <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">{todayLabel}</p>
+            <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">Hey {firstName}</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/circles"
-              className="font-mono text-[11px] uppercase tracking-wide text-muted underline underline-offset-2"
-            >
-              Circles
-            </Link>
-            <Link
-              href="/settings"
-              className="font-mono text-[11px] uppercase tracking-wide text-muted underline underline-offset-2"
-            >
-              Edit plan
-            </Link>
-            <SignOutButton />
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+          <Avatar name={name} />
+        </header>
 
-      <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <p className="mb-3 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Today</p>
-        <div className="flex flex-col gap-2">
-          {goals.map((g) => {
-            const done = today[g.id] === true;
-            return (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => toggleGoal(g.id)}
-                className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                  done ? "border-transparent bg-good-bg" : "border-line bg-surface"
-                }`}
-              >
-                <span
-                  className={`flex h-6 w-6 flex-none items-center justify-center rounded-[7px] border-2 ${
-                    done ? "border-good bg-good" : "border-line bg-surface-2"
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sage/20" />
+
+          <p className="relative mb-4 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Today</p>
+
+          <div className="relative mb-4 grid grid-cols-2 gap-3">
+            <MetricCard label="Streak" value={`${streak}d`} />
+            <MetricCard label="This week" value={weekPercent != null ? `${weekPercent}%` : "-"} />
+          </div>
+
+          <div className="relative flex flex-col gap-2">
+            {goals.map((g) => {
+              const done = today[g.id] === true;
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => toggleGoal(g.id)}
+                  className={`flex items-center gap-3 rounded-[1.5rem] border px-3 py-3 text-left transition-colors ${
+                    done ? "border-transparent bg-good-bg" : "border-line bg-surface"
                   }`}
                 >
-                  {done && (
-                    <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
-                      <path d="M4 12l5 5L20 6" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </span>
-                <span className="text-sm font-semibold">{g.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <div className="mb-2 flex items-center justify-between gap-3 px-0.5">
-          <p className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted">
-            Last {rangeDays} days{historyLoading ? "…" : ""}
-          </p>
-          <div className="flex items-center gap-1">
-            {HISTORY_RANGE_OPTIONS.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => selectRange(n)}
-                className={`rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide ${
-                  rangeDays === n ? "border-accent text-accent" : "border-line text-muted"
-                }`}
-              >
-                {n}d
-              </button>
-            ))}
+                  <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-full ${done ? "bg-accent" : "bg-surface-2"}`}>
+                    {done && (
+                      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                        <path d="M4 12l5 5L20 6" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </span>
+                  <span className="text-[15px] font-bold text-ink">{g.label}</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
-        <HabitGrid rows={gridRows} days={days} todayKey={todayKey} scrollRef={stripScrollRef} />
-      </section>
+        </section>
 
-      <p className="text-center text-xs text-muted">Every goal, every day — that&apos;s the whole rule.</p>
-      {status && <p className="text-center font-mono text-[11px] text-warn">{status}</p>}
-    </main>
+        <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+          <div className="mb-3 flex items-center justify-between gap-3 px-0.5">
+            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">
+              Last {rangeDays} days{historyLoading ? "..." : ""}
+            </p>
+            <div className="flex items-center gap-1">
+              {HISTORY_RANGE_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => selectRange(n)}
+                  className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                    rangeDays === n ? "border-accent text-accent" : "border-line text-muted"
+                  }`}
+                >
+                  {n}d
+                </button>
+              ))}
+            </div>
+          </div>
+          <HabitGrid rows={gridRows} days={days} todayKey={todayKey} scrollRef={stripScrollRef} />
+        </section>
+
+        <p className="text-center text-xs text-muted">Every goal, every day, that&apos;s the whole rule.</p>
+        {status && <p className="text-center text-[11px] font-bold text-warn">{status}</p>}
+      </main>
+      <AppNav />
+    </>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1rem] border border-line bg-surface-2/80 p-3 backdrop-blur">
+      <p className="font-bold text-[10px] uppercase tracking-[0.14em] text-sage">{label}</p>
+      <p className="mt-1 text-2xl font-black tabular-nums text-ink">{value}</p>
+    </div>
   );
 }

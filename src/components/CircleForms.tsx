@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 const inputClass =
-  "w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
+  "w-full rounded-full border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
 
 export function CircleForms() {
   const router = useRouter();
@@ -54,8 +54,8 @@ export function CircleForms() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <p className="mb-3 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Start a circle</p>
+      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+        <p className="mb-3 px-0.5 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Start a circle</p>
         <form onSubmit={handleCreate} className="flex gap-2">
           <input
             type="text"
@@ -69,15 +69,15 @@ export function CircleForms() {
           <button
             type="submit"
             disabled={creating}
-            className="flex-none rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-60"
+            className="flex-none rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-accent-ink disabled:opacity-60"
           >
-            {creating ? "…" : "Create"}
+            {creating ? "..." : "Create"}
           </button>
         </form>
       </section>
 
-      <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <p className="mb-3 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Join with a code</p>
+      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+        <p className="mb-3 px-0.5 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Join with a code</p>
         <form onSubmit={handleJoin} className="flex gap-2">
           <input
             type="text"
@@ -90,9 +90,9 @@ export function CircleForms() {
           <button
             type="submit"
             disabled={joining}
-            className="flex-none rounded-lg border border-line px-4 py-2 text-sm font-semibold disabled:opacity-60"
+            className="flex-none rounded-full border border-line px-5 py-2.5 text-sm font-bold text-ink disabled:opacity-60"
           >
-            {joining ? "…" : "Join"}
+            {joining ? "..." : "Join"}
           </button>
         </form>
       </section>

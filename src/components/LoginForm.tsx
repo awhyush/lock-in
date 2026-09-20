@@ -7,7 +7,7 @@ import Link from "next/link";
 import { AuthCard } from "@/components/AuthCard";
 
 const inputClass =
-  "w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
+  "w-full rounded-full border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
 
 export function LoginForm() {
   const router = useRouter();
@@ -59,9 +59,9 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-1 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-ink disabled:opacity-60"
+          className="mt-1 rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-ink disabled:opacity-60"
         >
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? "Signing in..." : "Sign in"}
         </button>
       </form>
       <p className="mt-5 text-center text-sm text-muted">

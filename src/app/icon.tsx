@@ -13,7 +13,7 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#15171c",
+          background: "#171e19",
           borderRadius: 96,
         }}
       >
@@ -21,8 +21,8 @@ export default function Icon() {
           style={{
             display: "flex",
             fontSize: 300,
-            fontWeight: 800,
-            color: "#ff7a45",
+            fontWeight: 900,
+            color: "#ff3b4e",
             fontFamily: "sans-serif",
           }}
         >

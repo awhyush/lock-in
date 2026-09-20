@@ -60,13 +60,13 @@ export function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
-      <div className="flex w-full max-w-sm items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 shadow-sm">
-        <span className="flex-1 text-sm">Install The Lock-In for quicker access.</span>
+    <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+96px)]">
+      <div className="flex w-full max-w-sm items-center gap-3 rounded-[1.5rem] border border-line bg-surface px-4 py-3 shadow-soft">
+        <span className="flex-1 text-sm text-ink">Install The Lock-In for quicker access.</span>
         <button
           type="button"
           onClick={install}
-          className="flex-none rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink"
+          className="flex-none rounded-full bg-accent px-3.5 py-1.5 text-xs font-bold text-accent-ink"
         >
           Install
         </button>
