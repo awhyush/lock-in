@@ -180,7 +180,7 @@ export function Tracker({
 
       <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
         <p className="mb-2 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Last 14 days</p>
-        <div className="grid grid-cols-[76px_1fr] gap-2.5">
+        <div className="grid grid-cols-[92px_1fr] gap-2.5">
           <div />
           <div className="grid grid-cols-[repeat(14,minmax(0,1fr))] gap-1 font-mono text-[9px] text-muted">
             {days.map((d) => (
