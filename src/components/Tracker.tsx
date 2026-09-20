@@ -3,17 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  DAY_RULES,
   HABIT_KEYS,
   HISTORY_RANGE_OPTIONS,
-  SCHEDULE,
   computeStreak,
   dateKey,
+  describeDayRule,
+  getDayRule,
   habitDone,
   habitTargetText,
   type CheckInData,
   type HabitKey,
   type HabitTarget,
+  type SportDays,
 } from "@/lib/habits";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -32,6 +33,7 @@ export function Tracker({
   todayLabel,
   initialHistory,
   initialLoadedDays,
+  sportDays,
 }: {
   name: string;
   targets: Record<HabitKey, HabitTarget>;
@@ -39,6 +41,7 @@ export function Tracker({
   todayLabel: string;
   initialHistory: Record<string, CheckInData>;
   initialLoadedDays: number;
+  sportDays: SportDays;
 }) {
   const [history, setHistory] = useState<Record<string, CheckInData>>(initialHistory);
   const [status, setStatus] = useState<string | null>(null);
@@ -49,7 +52,7 @@ export function Tracker({
   const firstName = name.split(" ")[0];
 
   const weekday = useMemo(() => new Date(`${todayKey}T00:00:00`).getDay(), [todayKey]);
-  const rule = DAY_RULES[weekday];
+  const rule = getDayRule(weekday, sportDays);
   const today = history[todayKey] ?? { exercise: false, study: false, apply: 0, build: false, movement: false, noNap: false };
 
   const days = useMemo(() => {
@@ -68,7 +71,10 @@ export function Tracker({
     if (el) el.scrollLeft = el.scrollWidth;
   }, [days]);
 
-  const streak = useMemo(() => computeStreak(history, new Date(`${todayKey}T00:00:00`)), [history, todayKey]);
+  const streak = useMemo(
+    () => computeStreak(history, new Date(`${todayKey}T00:00:00`), sportDays),
+    [history, todayKey, sportDays],
+  );
 
   async function selectRange(n: number) {
     setRangeDays(n);
@@ -263,19 +269,15 @@ export function Tracker({
 
       <section className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
         <p className="mb-1 px-0.5 font-mono text-[11px] tracking-[0.1em] uppercase text-muted">Weekly plan</p>
-        {SCHEDULE.map((s) => (
-          <details key={s.name} className="border-t border-line first:border-t-0">
-            <summary className="flex cursor-pointer list-none items-center justify-between py-3 text-sm font-semibold">
-              {s.name}
-              <span className="text-xs text-muted">▸</span>
-            </summary>
-            <div className="pb-3.5 text-sm leading-relaxed text-muted">
-              {s.lines.map((l) => (
-                <div key={l}>{l}</div>
-              ))}
+        {[0, 1, 2, 3, 4, 5, 6].map((d) => {
+          const dayRule = getDayRule(d, sportDays);
+          return (
+            <div key={d} className="flex items-center justify-between gap-3 border-t border-line py-3 first:border-t-0">
+              <span className="text-sm font-semibold">{dayRule.name}</span>
+              <span className="text-right text-sm text-muted">{describeDayRule(dayRule)}</span>
             </div>
-          </details>
-        ))}
+          );
+        })}
       </section>
 
       <p className="text-center text-xs text-muted">If you only hit the minimum today, the day still counts.</p>

@@ -20,8 +20,8 @@ Open [http://localhost:3000](http://localhost:3000).
 ## How it works
 
 1. **Sign up** with name, email, password (hashed with bcrypt, stored in Postgres via Prisma).
-2. **Onboarding**: pick a plan — Light, Standard, Ambitious, or Custom (set your own minutes per habit) — which decides every habit's target (`src/lib/habits.ts`). Changeable anytime from `/settings`.
-3. **Dashboard**: greets you by name, shows today's habits against that day's weekday rules (e.g. Tuesday's sport night counts as movement, no study expected), a running streak (computed over a real 60-day window under the hood, not just what's on screen), and a history strip you can widen to 14/30/90 days. Every tap writes straight to your account via `POST /api/checkin`.
+2. **Onboarding**: pick a plan — Light, Standard, Ambitious, or Custom (set your own minutes per habit) — which decides every habit's target, plus which night(s), if any, are sport nights (`src/lib/habits.ts`). Changeable anytime from `/settings`.
+3. **Dashboard**: greets you by name, shows today's habits against that day's weekday rules (plus whichever nights you've configured as sport nights, which only ask for movement), a running streak (computed over a real 60-day window under the hood, not just what's on screen), and a history strip you can widen to 14/30/90 days. Every tap writes straight to your account via `POST /api/checkin`.
 
 ## Deploying (Vercel)
 

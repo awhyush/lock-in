@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Next.js dev's auto-synced third-party agent skills cache (not something we authored)
+/.agents/
+skills-lock.json

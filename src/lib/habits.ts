@@ -143,11 +143,7 @@ export type DayRule = { name: string; required: HabitKey[]; note: string | null 
 export const DAY_RULES: Record<number, DayRule> = {
   0: { name: "Sunday", required: [], note: "Recovery + weekly planning. Light study only, no pressure." },
   1: { name: "Monday", required: ["exercise", "study", "apply", "build"], note: null },
-  2: {
-    name: "Tuesday",
-    required: ["exercise", "movement"],
-    note: "Sport night covers today’s movement — no serious studying tonight.",
-  },
+  2: { name: "Tuesday", required: ["exercise", "study", "apply", "build"], note: null },
   3: { name: "Wednesday", required: ["exercise", "study", "apply", "build"], note: null },
   4: { name: "Thursday", required: ["exercise", "study", "apply", "build"], note: null },
   5: {
@@ -162,19 +158,41 @@ export const DAY_RULES: Record<number, DayRule> = {
   },
 };
 
-export const SCHEDULE = [
-  {
-    name: "Monday / Wednesday / Thursday",
-    lines: ["Gym in the morning", "Study block", "Applications squeezed in around work", "Consistent bedtime"],
-  },
-  {
-    name: "Tuesday",
-    lines: ["Normal workday", "Sport in the evening", "Dinner, shower, no serious study", "Sleep"],
-  },
-  { name: "Friday", lines: ["Lighter study block", "Applications still happen", "PC / social time in the evening"] },
-  { name: "Saturday", lines: ["Longer study / technical work session", "Job applications", "Gym or sport, proper leisure time"] },
-  { name: "Sunday", lines: ["Recovery", "Weekly review + planning", "Some light studying", "Prep for Monday"] },
-];
+/** Every weekday index a user has marked as a sport day — whatever the day would
+ * otherwise require, it's replaced with just exercise + movement on that day. */
+export type SportDays = number[];
+
+export function parseSportDays(raw: string | null | undefined): SportDays {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const days = parsed.filter((n): n is number => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 6);
+    return Array.from(new Set(days)).sort((a, b) => a - b);
+  } catch {
+    return [];
+  }
+}
+
+/** Resolves a weekday's actual rule for this user: the base DAY_RULES entry, unless
+ * they've marked it as a sport day, in which case sport covers movement for them and
+ * nothing else is expected. */
+export function getDayRule(weekday: number, sportDays: SportDays): DayRule {
+  const base = DAY_RULES[weekday] ?? DAY_RULES[1];
+  if (!sportDays.includes(weekday)) return base;
+  return {
+    name: base.name,
+    required: ["exercise", "movement"],
+    note: "Sport covers today’s movement — no serious studying tonight.",
+  };
+}
+
+/** A short line describing what a resolved DayRule asks for — powers the "Weekly plan" list. */
+export function describeDayRule(rule: DayRule): string {
+  if (rule.note) return rule.note;
+  if (rule.required.length === 0) return "Nothing required — recovery day.";
+  return rule.required.map((k) => HABIT_LABELS[k]).join(", ");
+}
 
 export type CheckInData = {
   exercise: boolean;
@@ -217,18 +235,18 @@ export function habitDone(data: CheckInData | undefined, key: HabitKey): boolean
 
 /** true = every required habit met, false = a required habit is missing,
  * null = nothing was required that day (doesn't break or extend a streak) */
-export function dayComplete(data: CheckInData | undefined, weekday: number): boolean | null {
-  const required = (DAY_RULES[weekday] ?? DAY_RULES[1]).required;
+export function dayComplete(data: CheckInData | undefined, weekday: number, sportDays: SportDays): boolean | null {
+  const required = getDayRule(weekday, sportDays).required;
   if (!data) return required.length === 0 ? null : false;
   return required.every((k) => habitDone(data, k));
 }
 
-export function computeStreak(historyByDate: Record<string, CheckInData>, today: Date): number {
+export function computeStreak(historyByDate: Record<string, CheckInData>, today: Date, sportDays: SportDays): number {
   let streak = 0;
   for (let i = 0; i < STREAK_LOOKBACK_DAYS; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay());
+    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay(), sportDays);
     // today not finished yet doesn't break the streak, it just doesn't add to it
     if (i === 0 && complete !== true) continue;
     if (complete === false) break;
@@ -240,13 +258,17 @@ export function computeStreak(historyByDate: Record<string, CheckInData>, today:
 /** Percent of the last 7 days that were fully complete, counting only days that actually
  * required something (a light Sunday doesn't help or hurt the score). Null if nothing in
  * the window was eligible. */
-export function computeWeekCompletion(historyByDate: Record<string, CheckInData>, today: Date): number | null {
+export function computeWeekCompletion(
+  historyByDate: Record<string, CheckInData>,
+  today: Date,
+  sportDays: SportDays,
+): number | null {
   let eligible = 0;
   let completed = 0;
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay());
+    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay(), sportDays);
     if (complete === null) continue;
     eligible++;
     if (complete) completed++;

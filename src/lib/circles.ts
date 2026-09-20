@@ -5,6 +5,8 @@ import {
   computeStreak,
   computeWeekCompletion,
   dateKey,
+  dayComplete,
+  parseSportDays,
   type CheckInData,
 } from "@/lib/habits";
 
@@ -15,6 +17,7 @@ export type CircleMemberView = {
   name: string;
   streak: number;
   weekPercent: number | null;
+  doneToday: boolean;
   history: Record<string, CheckInData>;
 };
 
@@ -38,7 +41,7 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
 
   const circle = await prisma.circle.findUnique({
     where: { id: circleId },
-    include: { members: { include: { user: { select: { id: true, name: true } } } } },
+    include: { members: { include: { user: { select: { id: true, name: true, sportDays: true } } } } },
   });
   if (!circle) return null;
 
@@ -70,14 +73,16 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
   }
 
   const members: CircleMemberView[] = circle.members.map((m) => {
+    const sportDays = parseSportDays(m.user.sportDays);
     const fullHistory = historyByUser.get(m.user.id) ?? {};
-    const streak = computeStreak(fullHistory, today);
-    const weekPercent = computeWeekCompletion(fullHistory, today);
+    const streak = computeStreak(fullHistory, today, sportDays);
+    const weekPercent = computeWeekCompletion(fullHistory, today, sportDays);
+    const doneToday = dayComplete(fullHistory[todayKey], today.getDay(), sportDays) !== false;
     const history: Record<string, CheckInData> = {};
     for (const [date, data] of Object.entries(fullHistory)) {
       if (date >= visibleFromKey) history[date] = data;
     }
-    return { userId: m.user.id, name: m.user.name, streak, weekPercent, history };
+    return { userId: m.user.id, name: m.user.name, streak, weekPercent, doneToday, history };
   });
 
   return { id: circle.id, name: circle.name, inviteCode: circle.inviteCode, ownerId: circle.ownerId, todayKey, members };

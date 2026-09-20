@@ -36,9 +36,9 @@ export default async function Home() {
           Lock in on the gym, the job search, and the study grind.
         </h1>
         <p className="max-w-md text-[15px] leading-relaxed text-muted">
-          Pick a plan, then check off five habits a day. The rules adjust to your week — a Tuesday sport
-          night counts as movement, Sunday is just recovery and planning. A streak and a history view show
-          whether you&apos;re actually doing it, not just meaning to.
+          Pick a plan, then check off five habits a day. Tell it which nights you&apos;ve got sport and those
+          nights only ask for movement, Sunday is just recovery and planning. A streak and a history view
+          show whether you&apos;re actually doing it, not just meaning to.
         </p>
         <div className="flex items-center gap-3">
           <Link

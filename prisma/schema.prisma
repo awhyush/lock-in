@@ -15,6 +15,7 @@ model User {
   passwordHash      String
   intensity         String         @default("standard")
   customTargets     String?
+  sportDays         String?
   onboarded         Boolean        @default(false)
   createdAt         DateTime       @default(now())
   checkIns          CheckIn[]

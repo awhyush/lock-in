@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DAY_RULES, HABIT_KEYS, HABIT_LABELS, dateKey, habitDone, type CheckInData, type HabitKey } from "@/lib/habits";
+import { HABIT_KEYS, HABIT_LABELS, dateKey, habitDone, type CheckInData, type HabitKey } from "@/lib/habits";
 import type { CircleDetail, CircleMemberView } from "@/lib/circles";
 
 type SortMode = "streak" | "week";
@@ -12,9 +12,6 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
   const [sortMode, setSortMode] = useState<SortMode>("streak");
   const [copied, setCopied] = useState(false);
   const [leaving, setLeaving] = useState(false);
-
-  const weekday = useMemo(() => new Date(`${circle.todayKey}T00:00:00`).getDay(), [circle.todayKey]);
-  const rule = DAY_RULES[weekday];
 
   const days = useMemo(() => {
     const base = new Date(`${circle.todayKey}T00:00:00`);
@@ -36,13 +33,7 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
     return copy;
   }, [circle.members, sortMode]);
 
-  const notDoneToday = useMemo(() => {
-    if (rule.required.length === 0) return [];
-    return circle.members.filter((m) => {
-      const today = m.history[circle.todayKey];
-      return !rule.required.every((k) => habitDone(today, k));
-    });
-  }, [circle.members, rule, circle.todayKey]);
+  const notDoneToday = useMemo(() => circle.members.filter((m) => !m.doneToday), [circle.members]);
 
   async function copyCode() {
     try {

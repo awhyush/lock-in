@@ -3,7 +3,14 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Tracker } from "@/components/Tracker";
-import { DEFAULT_HISTORY_DAYS, dateKey, parseStoredPlan, resolveTargets, type CheckInData } from "@/lib/habits";
+import {
+  DEFAULT_HISTORY_DAYS,
+  dateKey,
+  parseSportDays,
+  parseStoredPlan,
+  resolveTargets,
+  type CheckInData,
+} from "@/lib/habits";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -46,6 +53,7 @@ export default async function DashboardPage() {
 
   const { mode, custom } = parseStoredPlan(user.intensity, user.customTargets);
   const targets = resolveTargets(mode, custom);
+  const sportDays = parseSportDays(user.sportDays);
 
   const todayLabel = today.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 
@@ -57,6 +65,7 @@ export default async function DashboardPage() {
       todayLabel={todayLabel}
       initialHistory={history}
       initialLoadedDays={DEFAULT_HISTORY_DAYS}
+      sportDays={sportDays}
     />
   );
 }

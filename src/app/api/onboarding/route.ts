@@ -3,6 +3,13 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PLAN_MODES, clampCustomTargets, type PlanMode } from "@/lib/habits";
 
+function parseSportDaysInput(input: unknown): number[] | null {
+  if (input === undefined) return [];
+  if (!Array.isArray(input)) return null;
+  if (input.some((n) => typeof n !== "number" || !Number.isInteger(n) || n < 0 || n > 6)) return null;
+  return Array.from(new Set(input as number[])).sort((a, b) => a - b);
+}
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -15,9 +22,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid plan." }, { status: 400 });
   }
 
-  const data: { intensity: string; onboarded: boolean; customTargets?: string } = {
+  const sportDays = parseSportDaysInput(body?.sportDays);
+  if (sportDays === null) {
+    return NextResponse.json({ error: "Invalid sport days." }, { status: 400 });
+  }
+
+  const data: { intensity: string; onboarded: boolean; customTargets?: string; sportDays: string } = {
     intensity: mode,
     onboarded: true,
+    sportDays: JSON.stringify(sportDays),
   };
 
   if (mode === "custom") {
