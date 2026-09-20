@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { parseStoredPlan } from "@/lib/habits";
 import { PlanForm } from "@/components/PlanForm";
+
+export const metadata: Metadata = {
+  title: "Your plan",
+  robots: { index: false, follow: false },
+};
 
 export default async function SettingsPage() {
   const session = await auth();
