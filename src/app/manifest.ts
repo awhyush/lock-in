@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: SITE_NAME,
     short_name: SITE_NAME,
     description: SITE_DESCRIPTION,
-    start_url: "/login",
+    start_url: "/",
     display: "standalone",
     background_color: THEME_COLOR_LIGHT,
     theme_color: THEME_COLOR_DARK,
