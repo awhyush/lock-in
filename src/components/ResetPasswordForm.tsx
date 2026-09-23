@@ -2,66 +2,85 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { AuthCard } from "@/components/AuthCard";
 
 const inputClass =
   "w-full rounded-full border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
 
-export function LoginForm() {
+export function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const justReset = searchParams.get("reset") === "1";
-  const [email, setEmail] = useState("");
+  const token = searchParams.get("token") ?? "";
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
-    const res = await signIn("credentials", { email, password, redirect: false });
-    setLoading(false);
-    if (!res || res.error) {
-      setError("Wrong email or password.");
+
+    if (password !== confirm) {
+      setError("Passwords don't match.");
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+
+    setLoading(true);
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+    const body = await res.json();
+    setLoading(false);
+
+    if (!res.ok) {
+      setError(body.error ?? "Something went wrong.");
+      return;
+    }
+
+    router.push("/login?reset=1");
+  }
+
+  if (!token) {
+    return (
+      <AuthCard eyebrow="Reset access" title="Reset password">
+        <p className="text-sm text-warn">
+          That reset link is missing its token. Request a new one from{" "}
+          <Link href="/forgot-password" className="font-medium text-ink underline underline-offset-2">
+            forgot password
+          </Link>
+          .
+        </p>
+      </AuthCard>
+    );
   }
 
   return (
-    <AuthCard eyebrow="Welcome back" title="Sign in">
-      {justReset && (
-        <p className="mb-4 rounded-[1rem] bg-good-bg px-4 py-2.5 text-sm text-ink">
-          Password updated. Sign in with your new password.
-        </p>
-      )}
+    <AuthCard eyebrow="Reset access" title="Reset password">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
-          Email
+          New password
           <input
-            type="email"
+            type="password"
             required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className={inputClass}
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium">
-          {/* Forgot-password is disabled for now (see src/app/forgot-password/page.tsx) until
-              a verified sending domain is set up — Resend's sandbox can only deliver to the
-              account owner's own email, not real users. Re-add this link when it's back. */}
-          Password
+          Confirm new password
           <input
             type="password"
             required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
             className={inputClass}
           />
         </label>
@@ -71,15 +90,9 @@ export function LoginForm() {
           disabled={loading}
           className="mt-1 rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-ink disabled:opacity-60"
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? "Saving..." : "Set new password"}
         </button>
       </form>
-      <p className="mt-5 text-center text-sm text-muted">
-        New here?{" "}
-        <Link href="/signup" className="font-medium text-ink underline underline-offset-2">
-          Create an account
-        </Link>
-      </p>
     </AuthCard>
   );
 }

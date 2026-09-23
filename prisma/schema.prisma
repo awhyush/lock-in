@@ -9,25 +9,46 @@ datasource db {
 }
 
 model User {
-  id                String         @id @default(cuid())
-  name              String
-  email             String         @unique
-  passwordHash      String
-  intensity         String         @default("standard")
-  customTargets     String?
-  onboarded         Boolean        @default(false)
-  createdAt         DateTime       @default(now())
-  checkIns          CheckIn[]
-  goals             Goal[]
-  ownedCircles      Circle[]       @relation("OwnedCircles")
-  circleMemberships CircleMember[]
+  id                   String                @id @default(cuid())
+  name                 String
+  email                String                @unique
+  passwordHash         String
+  intensity            String                @default("standard")
+  customTargets        String?
+  onboarded            Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  checkIns             CheckIn[]
+  goals                Goal[]
+  ownedCircles         Circle[]              @relation("OwnedCircles")
+  circleMemberships    CircleMember[]
+  passwordResetTokens  PasswordResetToken[]
 }
 
+/** A single-use, short-lived token for the forgot-password flow. Only a hash of the token
+ * is ever stored — the raw token exists only in the emailed link, so a DB leak alone can't
+ * be used to take over an account. */
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/** type: "checkbox" (plain done/not-done), "duration" (target is minutes, still tracked as a
+ * done/not-done toggle — mirrors the fixed-habit preset pattern), or "counter" (target is an
+ * "aim for N" count, tracked as an actual running count — mirrors the "Work"/apply habit). */
 model Goal {
   id        String      @id @default(cuid())
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   label     String
+  type      String      @default("checkbox")
+  target    Int?
   sortOrder Int         @default(0)
   createdAt DateTime    @default(now())
   entries   GoalEntry[]
@@ -42,6 +63,7 @@ model GoalEntry {
   userId String
   date   String
   done   Boolean @default(false)
+  count  Int     @default(0)
 
   @@unique([goalId, date])
   @@index([userId, date])
@@ -64,6 +86,9 @@ model CircleMember {
   userId   String
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   joinedAt DateTime @default(now())
+  /// JSON array of habit-key/goal-id strings this member has chosen to show in THIS circle.
+  /// Null means "show everything" (the default — nobody's view changes until they narrow it).
+  visibleKeys String?
 
   @@unique([circleId, userId])
 }

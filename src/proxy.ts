@@ -5,11 +5,13 @@ export default auth((req) => {
   const isLoggedIn = Boolean(req.auth?.user);
   const { pathname } = req.nextUrl;
 
-  const isAuthPage = pathname === "/login" || pathname === "/signup";
+  const isAuthPage =
+    pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password" || pathname === "/reset-password";
   const isProtected =
     pathname.startsWith("/dashboard") ||
     pathname === "/onboarding" ||
     pathname === "/settings" ||
+    pathname === "/profile" ||
     pathname.startsWith("/circles");
 
   if (!isLoggedIn && isProtected) {
@@ -24,5 +26,15 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/signup", "/onboarding", "/settings", "/circles/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/onboarding",
+    "/settings",
+    "/profile",
+    "/circles/:path*",
+  ],
 };

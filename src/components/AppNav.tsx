@@ -31,6 +31,15 @@ function SettingsIcon({ className }: { className?: string }) {
   );
 }
 
+function ProfileIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="8.2" r="3.4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4.5 19.5c1-3.5 3.8-5.5 7.5-5.5s6.5 2 7.5 5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function HomeIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
@@ -71,8 +80,8 @@ function SignOutIcon({ className }: { className?: string }) {
   );
 }
 
-/** Fixed floating bottom nav shown on every authenticated page: Circles / Settings on the
- * left, a Dashboard "home" FAB floating above the center, then theme + sign out on the right. */
+/** Fixed floating bottom nav shown on every authenticated page: Circles / Settings / Profile
+ * on the left, a Dashboard "home" FAB floating above the center, then theme + sign out on the right. */
 export function AppNav() {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
@@ -90,6 +99,9 @@ export function AppNav() {
         </NavIcon>
         <NavIcon href="/settings" label="Edit plan" active={pathname === "/settings"}>
           <SettingsIcon className="h-5 w-5" />
+        </NavIcon>
+        <NavIcon href="/profile" label="My profile" active={pathname === "/profile"}>
+          <ProfileIcon className="h-5 w-5" />
         </NavIcon>
 
         <span className="w-14 flex-none" aria-hidden />
