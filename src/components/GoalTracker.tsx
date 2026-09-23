@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { HISTORY_RANGE_OPTIONS, dateKey } from "@/lib/habits";
-import { computeGoalStreak, computeGoalWeekCompletion, type GoalDayData } from "@/lib/goals";
+import {
+  computeGoalStreak,
+  computeGoalWeekCompletion,
+  goalEntryDone,
+  goalTargetText,
+  type GoalDayData,
+  type GoalDef,
+} from "@/lib/goals";
 import { Avatar } from "@/components/Avatar";
 import { AppNav } from "@/components/AppNav";
 import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
@@ -18,7 +25,7 @@ export function GoalTracker({
   name: string;
   todayKey: string;
   todayLabel: string;
-  goals: { id: string; label: string }[];
+  goals: GoalDef[];
   initialHistory: Record<string, GoalDayData>;
   initialLoadedDays: number;
 }) {
@@ -29,7 +36,6 @@ export function GoalTracker({
   const [historyLoading, setHistoryLoading] = useState(false);
   const stripScrollRef = useRef<HTMLDivElement>(null);
   const firstName = name.split(" ")[0];
-  const goalIds = useMemo(() => goals.map((g) => g.id), [goals]);
   const today = history[todayKey] ?? {};
 
   const days = useMemo(() => {
@@ -53,19 +59,21 @@ export function GoalTracker({
       goals.map((g) => ({
         key: g.id,
         label: g.label,
-        history: Object.fromEntries(Object.entries(history).map(([date, data]) => [date, data[g.id] === true])),
+        history: Object.fromEntries(
+          Object.entries(history).map(([date, data]) => [date, goalEntryDone(g, data[g.id])]),
+        ),
       })),
     [goals, history],
   );
 
   const streak = useMemo(
-    () => computeGoalStreak(history, goalIds, new Date(`${todayKey}T00:00:00`)),
-    [history, goalIds, todayKey],
+    () => computeGoalStreak(history, goals, new Date(`${todayKey}T00:00:00`)),
+    [history, goals, todayKey],
   );
 
   const weekPercent = useMemo(
-    () => computeGoalWeekCompletion(history, goalIds, new Date(`${todayKey}T00:00:00`)),
-    [history, goalIds, todayKey],
+    () => computeGoalWeekCompletion(history, goals, new Date(`${todayKey}T00:00:00`)),
+    [history, goals, todayKey],
   );
 
   async function selectRange(n: number) {
@@ -86,19 +94,32 @@ export function GoalTracker({
     }
   }
 
-  async function toggleGoal(goalId: string) {
-    const next = today[goalId] !== true;
-    setHistory((h) => ({ ...h, [todayKey]: { ...(h[todayKey] ?? {}), [goalId]: next } }));
+  async function persistEntry(goal: GoalDef, next: { done: boolean; count: number }) {
+    setHistory((h) => ({ ...h, [todayKey]: { ...(h[todayKey] ?? {}), [goal.id]: next } }));
     try {
       const res = await fetch("/api/goal-entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goalId, date: todayKey, done: next }),
+        body: JSON.stringify(
+          goal.type === "counter"
+            ? { goalId: goal.id, date: todayKey, count: next.count }
+            : { goalId: goal.id, date: todayKey, done: next.done },
+        ),
       });
       setStatus(res.ok ? null : "not saved, try again");
     } catch {
       setStatus("offline, not saved");
     }
+  }
+
+  function toggleGoal(goal: GoalDef) {
+    const done = goalEntryDone(goal, today[goal.id]);
+    persistEntry(goal, { done: !done, count: 0 });
+  }
+
+  function stepGoalCount(goal: GoalDef, delta: number) {
+    const count = Math.max(0, (today[goal.id]?.count ?? 0) + delta);
+    persistEntry(goal, { done: count >= 1, count });
   }
 
   return (
@@ -124,24 +145,57 @@ export function GoalTracker({
 
           <div className="relative flex flex-col gap-2">
             {goals.map((g) => {
-              const done = today[g.id] === true;
+              const entry = today[g.id];
+              const done = goalEntryDone(g, entry);
+              const targetText = goalTargetText(g);
+
+              if (g.type === "counter") {
+                return (
+                  <div key={g.id} className="flex items-center gap-3 rounded-[1.5rem] border border-line bg-surface px-3 py-3">
+                    <IconHolder done={done} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[15px] font-bold text-ink">{g.label}</span>
+                      {targetText && <span className="block text-xs text-muted">{targetText}</span>}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        aria-label="decrease"
+                        onClick={() => stepGoalCount(g, -1)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-surface-2 text-sm leading-none text-ink"
+                      >
+                        -
+                      </button>
+                      <span className="min-w-4 text-center text-sm font-bold tabular-nums text-ink">
+                        {entry?.count ?? 0}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="increase"
+                        onClick={() => stepGoalCount(g, 1)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-surface-2 text-sm leading-none text-ink"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={g.id}
                   type="button"
-                  onClick={() => toggleGoal(g.id)}
+                  onClick={() => toggleGoal(g)}
                   className={`flex items-center gap-3 rounded-[1.5rem] border px-3 py-3 text-left transition-colors ${
                     done ? "border-transparent bg-good-bg" : "border-line bg-surface"
                   }`}
                 >
-                  <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-full ${done ? "bg-accent" : "bg-surface-2"}`}>
-                    {done && (
-                      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-                        <path d="M4 12l5 5L20 6" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
+                  <IconHolder done={done} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-bold text-ink">{g.label}</span>
+                    {targetText && <span className="block text-xs text-muted">{targetText}</span>}
                   </span>
-                  <span className="text-[15px] font-bold text-ink">{g.label}</span>
                 </button>
               );
             })}
@@ -185,5 +239,17 @@ function MetricCard({ label, value }: { label: string; value: string }) {
       <p className="font-bold text-[10px] uppercase tracking-[0.14em] text-sage">{label}</p>
       <p className="mt-1 text-2xl font-black tabular-nums text-ink">{value}</p>
     </div>
+  );
+}
+
+function IconHolder({ done }: { done: boolean }) {
+  return (
+    <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-full ${done ? "bg-accent" : "bg-surface-2"}`}>
+      {done && (
+        <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+          <path d="M4 12l5 5L20 6" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </span>
   );
 }

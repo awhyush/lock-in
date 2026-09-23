@@ -93,6 +93,8 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
           </div>
         )}
 
+        <VisibilityEditor circleId={circle.id} allKeys={circle.viewerAllKeys} visibleKeys={circle.viewerVisibleKeys} />
+
         <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
           <div className="mb-4 flex items-center justify-between gap-3 px-0.5">
             <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Members</p>
@@ -147,7 +149,101 @@ function MemberRow({
           {member.weekPercent != null && <span>{member.weekPercent}% this week</span>}
         </span>
       </div>
-      <HabitGrid rows={member.rows} days={days} todayKey={todayKey} compact />
+      {member.rows.length > 0 ? (
+        <HabitGrid rows={member.rows} days={days} todayKey={todayKey} compact />
+      ) : (
+        <p className="text-xs text-muted">Nothing shared here.</p>
+      )}
     </div>
+  );
+}
+
+function VisibilityEditor({
+  circleId,
+  allKeys,
+  visibleKeys,
+}: {
+  circleId: string;
+  allKeys: { key: string; label: string }[];
+  visibleKeys: string[] | null;
+}) {
+  const router = useRouter();
+  const [expanded, setExpanded] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(
+    () => new Set(visibleKeys ?? allKeys.map((k) => k.key)),
+  );
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  function toggleKey(key: string) {
+    setSaved(false);
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  async function save() {
+    setSaving(true);
+    const showsEverything = selected.size === allKeys.length;
+    await fetch(`/api/circles/${circleId}/visibility`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keys: showsEverything ? null : [...selected] }),
+    });
+    setSaving(false);
+    setSaved(true);
+    router.refresh();
+  }
+
+  if (allKeys.length === 0) return null;
+
+  return (
+    <section className="rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <span className="text-sm font-bold text-ink">What you share here</span>
+        <span className="text-xs font-bold text-muted">{expanded ? "Hide" : "Edit"}</span>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 flex flex-col gap-3">
+          <p className="text-xs text-muted">
+            Choose which of your habits show up in this circle. Everyone still sees your streak and grid, just
+            only for what you pick here.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {allKeys.map((k) => {
+              const active = selected.has(k.key);
+              return (
+                <button
+                  key={k.key}
+                  type="button"
+                  onClick={() => toggleKey(k.key)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-bold ${
+                    active ? "border-accent bg-accent text-accent-ink" : "border-line text-muted"
+                  }`}
+                >
+                  {k.label}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="self-start rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-ink disabled:opacity-60"
+          >
+            {saving ? "Saving..." : saved ? "Saved" : "Save"}
+          </button>
+        </div>
+      )}
+    </section>
   );
 }

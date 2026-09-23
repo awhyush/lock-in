@@ -3,11 +3,25 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PLAN_INFO, PLAN_MODES, type PlanMode } from "@/lib/habits";
-import { MAX_GOALS, MAX_GOAL_LABEL_LENGTH } from "@/lib/goals";
+import {
+  GOAL_COUNTER_BOUNDS,
+  GOAL_DURATION_BOUNDS,
+  MAX_GOALS,
+  MAX_GOAL_LABEL_LENGTH,
+  goalTargetText,
+  type GoalDef,
+  type GoalType,
+} from "@/lib/goals";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AppNav } from "@/components/AppNav";
 
-type GoalDraft = { id: string | null; label: string };
+type GoalDraft = { id: string | null; label: string; type: GoalType; target: number | null };
+
+const TYPE_OPTIONS: { type: GoalType; label: string }[] = [
+  { type: "checkbox", label: "Checkbox" },
+  { type: "duration", label: "Duration" },
+  { type: "counter", label: "Counter" },
+];
 
 export function PlanForm({
   name,
@@ -18,21 +32,30 @@ export function PlanForm({
   name: string;
   mode: "onboarding" | "settings";
   initialPlanMode: PlanMode;
-  initialGoals: { id: string; label: string }[];
+  initialGoals: GoalDef[];
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<PlanMode>(initialPlanMode);
   const [goals, setGoals] = useState<GoalDraft[]>(initialGoals);
   const [newGoalLabel, setNewGoalLabel] = useState("");
+  const [newGoalType, setNewGoalType] = useState<GoalType>("checkbox");
+  const [newGoalTarget, setNewGoalTarget] = useState(GOAL_DURATION_BOUNDS.min);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const firstName = name.split(" ")[0];
 
+  function changeNewGoalType(type: GoalType) {
+    setNewGoalType(type);
+    setNewGoalTarget(type === "counter" ? GOAL_COUNTER_BOUNDS.min : GOAL_DURATION_BOUNDS.min);
+  }
+
   function addGoal() {
     const label = newGoalLabel.trim();
     if (!label || goals.length >= MAX_GOALS) return;
-    setGoals((g) => [...g, { id: null, label }]);
+    const target = newGoalType === "checkbox" ? null : newGoalTarget;
+    setGoals((g) => [...g, { id: null, label, type: newGoalType, target }]);
     setNewGoalLabel("");
+    changeNewGoalType("checkbox");
   }
 
   function removeGoal(index: number) {
@@ -58,6 +81,8 @@ export function PlanForm({
     router.push("/dashboard");
     router.refresh();
   }
+
+  const targetBounds = newGoalType === "counter" ? GOAL_COUNTER_BOUNDS : GOAL_DURATION_BOUNDS;
 
   return (
     <>
@@ -99,8 +124,8 @@ export function PlanForm({
                   </button>
 
                   {key === "custom" && active && (
-                    <div className="mt-2 flex flex-col gap-2 rounded-[1.5rem] border border-line bg-surface-2 p-4">
-                      <div className="flex items-center gap-2">
+                    <div className="mt-2 flex flex-col gap-3 rounded-[1.5rem] border border-line bg-surface-2 p-4">
+                      <div className="flex flex-col gap-2">
                         <input
                           type="text"
                           value={newGoalLabel}
@@ -115,13 +140,49 @@ export function PlanForm({
                           }}
                           className="w-full rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
                         />
+
+                        <div className="flex items-center gap-1.5">
+                          {TYPE_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.type}
+                              type="button"
+                              onClick={() => changeNewGoalType(opt.type)}
+                              className={`rounded-full border px-3 py-1.5 text-xs font-bold ${
+                                newGoalType === opt.type ? "border-accent bg-accent text-accent-ink" : "border-line text-muted"
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {newGoalType !== "checkbox" && (
+                          <div className="flex items-center gap-3 rounded-full border border-line bg-surface px-4 py-2">
+                            <span className="text-xs font-medium text-muted">
+                              {newGoalType === "counter" ? "Aim for" : "Minutes"}
+                            </span>
+                            <input
+                              type="range"
+                              min={targetBounds.min}
+                              max={targetBounds.max}
+                              step={targetBounds.step}
+                              value={newGoalTarget}
+                              onChange={(e) => setNewGoalTarget(Number(e.target.value))}
+                              className="flex-1 accent-accent"
+                            />
+                            <span className="w-10 flex-none text-right text-sm font-bold tabular-nums text-ink">
+                              {newGoalTarget}
+                            </span>
+                          </div>
+                        )}
+
                         <button
                           type="button"
                           onClick={addGoal}
                           disabled={!newGoalLabel.trim() || goals.length >= MAX_GOALS}
-                          className="flex-none rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-ink disabled:opacity-50"
+                          className="rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-ink disabled:opacity-50"
                         >
-                          Add
+                          Add goal
                         </button>
                       </div>
 
@@ -130,9 +191,14 @@ export function PlanForm({
                           {goals.map((g, i) => (
                             <li
                               key={g.id ?? `new-${i}`}
-                              className="flex items-center justify-between gap-2 rounded-full border border-line bg-surface px-4 py-2"
+                              className="flex items-center justify-between gap-2 rounded-[1rem] border border-line bg-surface px-4 py-2.5"
                             >
-                              <span className="truncate text-sm text-ink">{g.label}</span>
+                              <span className="min-w-0">
+                                <span className="block truncate text-sm text-ink">{g.label}</span>
+                                {goalTargetText(g) && (
+                                  <span className="block text-xs text-muted">{goalTargetText(g)}</span>
+                                )}
+                              </span>
                               <button
                                 type="button"
                                 onClick={() => removeGoal(i)}

@@ -11,11 +11,21 @@ import {
   habitDone,
   parseStoredPlan,
   type CheckInData,
+  type HabitKey,
 } from "@/lib/habits";
-import { computeGoalStreak, computeGoalWeekCompletion, goalDayComplete, type GoalDayData } from "@/lib/goals";
+import {
+  computeGoalStreak,
+  computeGoalWeekCompletion,
+  goalDayComplete,
+  goalEntryDone,
+  type GoalDayData,
+  type GoalDef,
+} from "@/lib/goals";
 import type { HabitGridRow } from "@/components/HabitGrid";
 
 const VISIBLE_DAYS = HISTORY_RANGE_OPTIONS[0]; // 14 — circle members only ever see this much
+
+export type CircleKeyOption = { key: string; label: string };
 
 export type CircleMemberView = {
   userId: string;
@@ -33,7 +43,32 @@ export type CircleDetail = {
   ownerId: string;
   todayKey: string;
   members: CircleMemberView[];
+  /** The viewer's own full, unfiltered set of habit/goal keys — for the "what you share
+   * here" visibility editor. Not filtered, since you always get to see the full list of
+   * things you could choose to show. */
+  viewerAllKeys: CircleKeyOption[];
+  /** The viewer's current visibility choice for this circle. Null means "show everything". */
+  viewerVisibleKeys: string[] | null;
 };
+
+/** Parses the CircleMember.visibleKeys JSON column. Null/invalid/non-array-of-strings all
+ * mean "show everything" — the safe default so a corrupt value never hides more than it should. */
+export function parseVisibleKeys(raw: string | null): string[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.every((k) => typeof k === "string")) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function filterByVisibility<T extends { key: string }>(items: T[], visibleKeys: string[] | null): T[] {
+  if (visibleKeys === null) return items;
+  const set = new Set(visibleKeys);
+  return items.filter((item) => set.has(item.key));
+}
 
 function trimToVisible<T>(fullHistory: Record<string, T>, visibleFromKey: string): Record<string, T> {
   const trimmed: Record<string, T> = {};
@@ -47,7 +82,12 @@ function trimToVisible<T>(fullHistory: Record<string, T>, visibleFromKey: string
  * don't confirm a circle exists to non-members). Fetches DEFAULT_HISTORY_DAYS per member so
  * streak/weekPercent are accurate, but only returns the last VISIBLE_DAYS of raw history.
  * Preset-plan members are read from CheckIn (the fixed 5 habits); custom-plan members are
- * read from their own Goal/GoalEntry rows — a circle can mix both freely. */
+ * read from their own Goal/GoalEntry rows — a circle can mix both freely.
+ *
+ * Each member can restrict which of their own habits/goals show up in THIS circle
+ * (CircleMember.visibleKeys) — streak/weekPercent/doneToday/rows are all computed from that
+ * restricted subset, not their true full plan, so hidden habits can't leak through the
+ * aggregate numbers either. */
 export async function getCircleForMember(circleId: string, viewerId: string): Promise<CircleDetail | null> {
   const membership = await prisma.circleMember.findUnique({
     where: { circleId_userId: { circleId, userId: viewerId } },
@@ -108,52 +148,82 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
     };
   }
 
-  const goalsByUser = new Map<string, { id: string; label: string }[]>();
+  const goalsByUser = new Map<string, GoalDef[]>();
   for (const m of customMembers) goalsByUser.set(m.user.id, []);
-  for (const g of goals) goalsByUser.get(g.userId)?.push({ id: g.id, label: g.label });
+  for (const g of goals) {
+    goalsByUser.get(g.userId)?.push({ id: g.id, label: g.label, type: g.type as GoalDef["type"], target: g.target });
+  }
 
   const goalHistoryByUser = new Map<string, Record<string, GoalDayData>>();
   for (const m of customMembers) goalHistoryByUser.set(m.user.id, {});
   for (const e of goalEntries) {
     const userHistory = goalHistoryByUser.get(e.userId)!;
-    (userHistory[e.date] ??= {})[e.goalId] = e.done;
+    (userHistory[e.date] ??= {})[e.goalId] = { done: e.done, count: e.count };
   }
+
+  let viewerAllKeys: CircleKeyOption[] = [];
+  let viewerVisibleKeys: string[] | null = null;
 
   const members: CircleMemberView[] = circle.members.map((m) => {
     const isCustom = parseStoredPlan(m.user.intensity, m.user.customTargets).mode === "custom";
+    const visibleKeys = parseVisibleKeys(m.visibleKeys);
 
     if (isCustom) {
-      const userGoals = goalsByUser.get(m.user.id) ?? [];
-      const goalIds = userGoals.map((g) => g.id);
+      const allGoals = goalsByUser.get(m.user.id) ?? [];
+      const visibleGoals = filterByVisibility(
+        allGoals.map((g) => ({ ...g, key: g.id })),
+        visibleKeys,
+      );
       const fullHistory = goalHistoryByUser.get(m.user.id) ?? {};
-      const streak = computeGoalStreak(fullHistory, goalIds, today);
-      const weekPercent = computeGoalWeekCompletion(fullHistory, goalIds, today);
-      const doneToday = goalDayComplete(fullHistory[todayKey], goalIds) !== false;
+      const streak = computeGoalStreak(fullHistory, visibleGoals, today);
+      const weekPercent = computeGoalWeekCompletion(fullHistory, visibleGoals, today);
+      const doneToday = goalDayComplete(fullHistory[todayKey], visibleGoals) !== false;
       const visibleHistory = trimToVisible(fullHistory, visibleFromKey);
-      const rows: HabitGridRow[] = userGoals.map((g) => ({
+      const rows: HabitGridRow[] = visibleGoals.map((g) => ({
         key: g.id,
         label: g.label,
         history: Object.fromEntries(
-          Object.entries(visibleHistory).map(([date, data]) => [date, data[g.id] === true]),
+          Object.entries(visibleHistory).map(([date, data]) => [date, goalEntryDone(g, data[g.id])]),
         ),
       }));
+      if (m.user.id === viewerId) {
+        viewerAllKeys = allGoals.map((g) => ({ key: g.id, label: g.label }));
+        viewerVisibleKeys = visibleKeys;
+      }
       return { userId: m.user.id, name: m.user.name, streak, weekPercent, doneToday, rows };
     }
 
+    const visibleHabitKeys = filterByVisibility(
+      HABIT_KEYS.map((key) => ({ key })),
+      visibleKeys,
+    ).map((h) => h.key as HabitKey);
     const fullHistory = checkInHistoryByUser.get(m.user.id) ?? {};
-    const streak = computeStreak(fullHistory, today);
-    const weekPercent = computeWeekCompletion(fullHistory, today);
-    const doneToday = dayComplete(fullHistory[todayKey], today.getDay()) !== false;
+    const streak = computeStreak(fullHistory, today, visibleHabitKeys);
+    const weekPercent = computeWeekCompletion(fullHistory, today, visibleHabitKeys);
+    const doneToday = dayComplete(fullHistory[todayKey], today.getDay(), visibleHabitKeys) !== false;
     const visibleHistory = trimToVisible(fullHistory, visibleFromKey);
-    const rows: HabitGridRow[] = HABIT_KEYS.map((key) => ({
+    const rows: HabitGridRow[] = visibleHabitKeys.map((key) => ({
       key,
       label: HABIT_LABELS[key],
       history: Object.fromEntries(
         Object.entries(visibleHistory).map(([date, data]) => [date, habitDone(data, key)]),
       ),
     }));
+    if (m.user.id === viewerId) {
+      viewerAllKeys = HABIT_KEYS.map((key) => ({ key, label: HABIT_LABELS[key] }));
+      viewerVisibleKeys = visibleKeys;
+    }
     return { userId: m.user.id, name: m.user.name, streak, weekPercent, doneToday, rows };
   });
 
-  return { id: circle.id, name: circle.name, inviteCode: circle.inviteCode, ownerId: circle.ownerId, todayKey, members };
+  return {
+    id: circle.id,
+    name: circle.name,
+    inviteCode: circle.inviteCode,
+    ownerId: circle.ownerId,
+    todayKey,
+    members,
+    viewerAllKeys,
+    viewerVisibleKeys,
+  };
 }

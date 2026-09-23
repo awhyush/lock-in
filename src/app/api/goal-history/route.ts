@@ -21,9 +21,9 @@ export async function GET(req: Request) {
     where: { userId: session.user.id, date: { gte: dateKey(fromDate), lte: dateKey(today) } },
   });
 
-  const history: Record<string, Record<string, boolean>> = {};
+  const history: Record<string, Record<string, { done: boolean; count: number }>> = {};
   for (const e of entries) {
-    (history[e.date] ??= {})[e.goalId] = e.done;
+    (history[e.date] ??= {})[e.goalId] = { done: e.done, count: e.count };
   }
 
   return NextResponse.json({ history });

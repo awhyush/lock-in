@@ -26,7 +26,12 @@ export default async function SettingsPage() {
       name={user.name}
       mode="settings"
       initialPlanMode={mode}
-      initialGoals={goals.map((g) => ({ id: g.id, label: g.label }))}
+      initialGoals={goals.map((g) => ({
+        id: g.id,
+        label: g.label,
+        type: g.type as "checkbox" | "duration" | "counter",
+        target: g.target,
+      }))}
     />
   );
 }

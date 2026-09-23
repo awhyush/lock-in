@@ -205,19 +205,26 @@ export function habitDone(data: CheckInData | undefined, key: HabitKey): boolean
 }
 
 /** true = every required habit met, false = a required habit is missing,
- * null = nothing was required that day (doesn't break or extend a streak) */
-export function dayComplete(data: CheckInData | undefined, weekday: number): boolean | null {
-  const required = (DAY_RULES[weekday] ?? DAY_RULES[1]).required;
+ * null = nothing was required that day (doesn't break or extend a streak).
+ * `restrictToKeys`, when given, narrows "required" to only that subset first — used to
+ * compute a circle-specific view where the member has hidden some habits from that circle. */
+export function dayComplete(data: CheckInData | undefined, weekday: number, restrictToKeys?: HabitKey[]): boolean | null {
+  let required = (DAY_RULES[weekday] ?? DAY_RULES[1]).required;
+  if (restrictToKeys) required = required.filter((k) => restrictToKeys.includes(k));
   if (!data) return required.length === 0 ? null : false;
   return required.every((k) => habitDone(data, k));
 }
 
-export function computeStreak(historyByDate: Record<string, CheckInData>, today: Date): number {
+export function computeStreak(
+  historyByDate: Record<string, CheckInData>,
+  today: Date,
+  restrictToKeys?: HabitKey[],
+): number {
   let streak = 0;
   for (let i = 0; i < STREAK_LOOKBACK_DAYS; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay());
+    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay(), restrictToKeys);
     // today not finished yet doesn't break the streak, it just doesn't add to it
     if (i === 0 && complete !== true) continue;
     if (complete === false) break;
@@ -229,13 +236,17 @@ export function computeStreak(historyByDate: Record<string, CheckInData>, today:
 /** Percent of the last 7 days that were fully complete, counting only days that actually
  * required something (a light Sunday doesn't help or hurt the score). Null if nothing in
  * the window was eligible. */
-export function computeWeekCompletion(historyByDate: Record<string, CheckInData>, today: Date): number | null {
+export function computeWeekCompletion(
+  historyByDate: Record<string, CheckInData>,
+  today: Date,
+  restrictToKeys?: HabitKey[],
+): number | null {
   let eligible = 0;
   let completed = 0;
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay());
+    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay(), restrictToKeys);
     if (complete === null) continue;
     eligible++;
     if (complete) completed++;

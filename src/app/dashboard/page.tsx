@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Tracker } from "@/components/Tracker";
 import { GoalTracker } from "@/components/GoalTracker";
 import { DEFAULT_HISTORY_DAYS, HABIT_LABELS, dateKey, parseStoredPlan, resolveTargets, type CheckInData } from "@/lib/habits";
-import type { GoalDayData } from "@/lib/goals";
+import type { GoalDayData, GoalDef } from "@/lib/goals";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -52,15 +52,22 @@ export default async function DashboardPage() {
     });
     const history: Record<string, GoalDayData> = {};
     for (const e of entries) {
-      (history[e.date] ??= {})[e.goalId] = e.done;
+      (history[e.date] ??= {})[e.goalId] = { done: e.done, count: e.count };
     }
+
+    const goalDefs: GoalDef[] = goals.map((g) => ({
+      id: g.id,
+      label: g.label,
+      type: g.type as GoalDef["type"],
+      target: g.target,
+    }));
 
     return (
       <GoalTracker
         name={user.name}
         todayKey={todayKey}
         todayLabel={todayLabel}
-        goals={goals.map((g) => ({ id: g.id, label: g.label }))}
+        goals={goalDefs}
         initialHistory={history}
         initialLoadedDays={DEFAULT_HISTORY_DAYS}
       />
