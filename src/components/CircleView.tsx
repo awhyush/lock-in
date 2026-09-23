@@ -116,7 +116,14 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
 
           <div className="flex flex-col gap-5">
             {sortedMembers.map((m) => (
-              <MemberRow key={m.userId} member={m} days={days} todayKey={circle.todayKey} isSelf={m.userId === viewerId} />
+              <MemberRow
+                key={m.userId}
+                circleId={circle.id}
+                member={m}
+                days={days}
+                todayKey={circle.todayKey}
+                isSelf={m.userId === viewerId}
+              />
             ))}
           </div>
         </section>
@@ -127,28 +134,63 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
 }
 
 function MemberRow({
+  circleId,
   member,
   days,
   todayKey,
   isSelf,
 }: {
+  circleId: string;
   member: CircleMemberView;
   days: { key: string; label: string }[];
   todayKey: string;
   isSelf: boolean;
 }) {
+  const [nudged, setNudged] = useState(false);
+  const [nudging, setNudging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function nudge() {
+    setNudging(true);
+    setError(null);
+    const res = await fetch(`/api/circles/${circleId}/nudge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ toUserId: member.userId }),
+    });
+    setNudging(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      setError(body?.error ?? "Couldn't send that.");
+      return;
+    }
+    setNudged(true);
+  }
+
   return (
     <div>
-      <div className="mb-2 flex items-baseline justify-between">
+      <div className="mb-2 flex items-baseline justify-between gap-3">
         <span className="text-sm font-bold text-ink">
           {member.name}
           {isSelf && <span className="ml-1.5 text-xs font-medium text-muted">(you)</span>}
         </span>
-        <span className="flex items-center gap-3 text-xs font-bold text-muted">
+        <span className="flex items-center gap-2 text-xs font-bold text-muted">
           <span className="text-accent">{member.streak}d streak</span>
           {member.weekPercent != null && <span>{member.weekPercent}% this week</span>}
+          {member.canNudge && !nudged && (
+            <button
+              type="button"
+              onClick={nudge}
+              disabled={nudging}
+              className="rounded-full border border-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-accent disabled:opacity-60"
+            >
+              {nudging ? "..." : "Nudge"}
+            </button>
+          )}
+          {nudged && <span className="rounded-full border border-line px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide">Nudged</span>}
         </span>
       </div>
+      {error && <p className="mb-2 text-xs text-warn">{error}</p>}
       {member.rows.length > 0 ? (
         <HabitGrid rows={member.rows} days={days} todayKey={todayKey} compact />
       ) : (

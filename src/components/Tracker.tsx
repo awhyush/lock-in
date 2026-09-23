@@ -18,6 +18,7 @@ import {
 import { Avatar } from "@/components/Avatar";
 import { AppNav } from "@/components/AppNav";
 import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
+import { NudgeBanner, type NudgeNotice } from "@/components/NudgeBanner";
 
 const BOOLEAN_KEYS: Extract<HabitKey, "exercise" | "study" | "build" | "movement">[] = [
   "exercise",
@@ -33,6 +34,7 @@ export function Tracker({
   todayLabel,
   initialHistory,
   initialLoadedDays,
+  nudges,
 }: {
   name: string;
   targets: Record<HabitKey, HabitTarget>;
@@ -40,6 +42,7 @@ export function Tracker({
   todayLabel: string;
   initialHistory: Record<string, CheckInData>;
   initialLoadedDays: number;
+  nudges: NudgeNotice[];
 }) {
   const [history, setHistory] = useState<Record<string, CheckInData>>(initialHistory);
   const [status, setStatus] = useState<string | null>(null);
@@ -141,6 +144,8 @@ export function Tracker({
           </div>
           <Avatar name={name} />
         </header>
+
+        <NudgeBanner nudges={nudges} />
 
         <section className="relative overflow-hidden rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sage/20" />

@@ -21,6 +21,7 @@ import {
   type GoalDayData,
   type GoalDef,
 } from "@/lib/goals";
+import { isNudgeWindowOpen } from "@/lib/nudges";
 import type { HabitGridRow } from "@/components/HabitGrid";
 
 const VISIBLE_DAYS = HISTORY_RANGE_OPTIONS[0]; // 14 — circle members only ever see this much
@@ -34,6 +35,10 @@ export type CircleMemberView = {
   weekPercent: number | null;
   doneToday: boolean;
   rows: HabitGridRow[];
+  /** Can the viewer nudge this member right now: not themselves, not done today, the
+   * nudge window is open (< NUDGE_WINDOW_HOURS left today), and the viewer hasn't already
+   * nudged them today. */
+  canNudge: boolean;
 };
 
 export type CircleDetail = {
@@ -116,7 +121,7 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
   const presetMembers = circle.members.filter((m) => parseStoredPlan(m.user.intensity, m.user.customTargets).mode !== "custom");
   const customMembers = circle.members.filter((m) => parseStoredPlan(m.user.intensity, m.user.customTargets).mode === "custom");
 
-  const [checkIns, goals, goalEntries] = await Promise.all([
+  const [checkIns, goals, goalEntries, nudgesSentByViewerToday] = await Promise.all([
     presetMembers.length
       ? prisma.checkIn.findMany({
           where: { userId: { in: presetMembers.map((m) => m.user.id) }, date: { gte: fromKey, lte: todayKey } },
@@ -133,7 +138,11 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
           where: { userId: { in: customMembers.map((m) => m.user.id) }, date: { gte: fromKey, lte: todayKey } },
         })
       : Promise.resolve([]),
+    prisma.nudge.findMany({ where: { circleId, fromUserId: viewerId, date: todayKey }, select: { toUserId: true } }),
   ]);
+
+  const nudgeWindowOpen = isNudgeWindowOpen(today);
+  const alreadyNudgedToday = new Set(nudgesSentByViewerToday.map((n) => n.toUserId));
 
   const checkInHistoryByUser = new Map<string, Record<string, CheckInData>>();
   for (const m of presetMembers) checkInHistoryByUser.set(m.user.id, {});
@@ -164,6 +173,10 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
   let viewerAllKeys: CircleKeyOption[] = [];
   let viewerVisibleKeys: string[] | null = null;
 
+  function canNudge(memberUserId: string, doneToday: boolean): boolean {
+    return memberUserId !== viewerId && !doneToday && nudgeWindowOpen && !alreadyNudgedToday.has(memberUserId);
+  }
+
   const members: CircleMemberView[] = circle.members.map((m) => {
     const isCustom = parseStoredPlan(m.user.intensity, m.user.customTargets).mode === "custom";
     const visibleKeys = parseVisibleKeys(m.visibleKeys);
@@ -190,7 +203,7 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
         viewerAllKeys = allGoals.map((g) => ({ key: g.id, label: g.label }));
         viewerVisibleKeys = visibleKeys;
       }
-      return { userId: m.user.id, name: m.user.name, streak, weekPercent, doneToday, rows };
+      return { userId: m.user.id, name: m.user.name, streak, weekPercent, doneToday, rows, canNudge: canNudge(m.user.id, doneToday) };
     }
 
     const visibleHabitKeys = filterByVisibility(
@@ -213,7 +226,7 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
       viewerAllKeys = HABIT_KEYS.map((key) => ({ key, label: HABIT_LABELS[key] }));
       viewerVisibleKeys = visibleKeys;
     }
-    return { userId: m.user.id, name: m.user.name, streak, weekPercent, doneToday, rows };
+    return { userId: m.user.id, name: m.user.name, streak, weekPercent, doneToday, rows, canNudge: canNudge(m.user.id, doneToday) };
   });
 
   return {

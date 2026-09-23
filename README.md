@@ -22,7 +22,7 @@ Open [http://localhost:3000](http://localhost:3000).
 1. **Sign up** with name, email, password (hashed with bcrypt, stored in Postgres via Prisma). Already signed in? Change your password anytime from `/profile`, which requires your current password — see [Password reset & change](#password-reset--change) below.
 2. **Onboarding**: pick a plan — Light, Standard, Ambitious, or Custom — which decides every habit's target (`src/lib/habits.ts`). **Custom** is different from the other three: instead of retargeting the same 5 fixed habits, you define your own goals (at least one, as many as you want), each with its own tracking type — see [Custom goal types](#custom-goal-types) below. Changeable anytime from `/settings`.
 3. **Dashboard**: greets you by name, shows today's habits/goals, a running streak (computed over a real 60-day window under the hood, not just what's on screen), and a history strip you can widen to 14/30/90 days — one row per habit (preset plans, `src/components/Tracker.tsx`) or per goal (custom plans, `src/components/GoalTracker.tsx`). Preset plans also get weekday rules (Friday's lighter, Saturday's just exercise, Sunday's recovery); custom goals are required every day, no variation. Every tap writes straight to your account via `POST /api/checkin` or `POST /api/goal-entries`.
-4. **Circles**: invite friends via a shareable code, see each other's last-14-day grid (done/not-done only — never exact counts), sorted by streak or this-week %, with a quiet "still to go today" nudge. A circle happily mixes preset- and custom-plan members — each renders their own row set. Each member also controls, per circle, which of their own habits/goals are visible there — see [Per-circle visibility](#per-circle-visibility) below.
+4. **Circles**: invite friends via a shareable code, see each other's last-14-day grid (done/not-done only — never exact counts), sorted by streak or this-week %, with a quiet "still to go today" nudge. A circle happily mixes preset- and custom-plan members — each renders their own row set. Each member also controls, per circle, which of their own habits/goals are visible there — see [Per-circle visibility](#per-circle-visibility) below. In the last 2 hours of the day, members who haven't finished can be nudged — see [Nudges](#nudges) below.
 
 ## Custom goal types
 
@@ -39,6 +39,15 @@ Each custom goal has one of three types (`src/lib/goals.ts`), chosen when it's c
 Every circle membership (`CircleMember.visibleKeys`, a JSON array of habit-keys/goal-ids) can independently restrict which of that member's own habits/goals are shown in *that* circle. Null (the default) means "show everything" — nobody's existing circles change until they narrow something. Editable from the circle page's "What you share here" panel, saved via `PATCH /api/circles/[id]/visibility`, which is scoped to `session.user.id` + the circle id from the URL — it can only ever update the caller's own membership row.
 
 The restriction isn't just cosmetic: `getCircleForMember` (`src/lib/circles.ts`) computes streak, week %, and "done today" from the *filtered* subset too, not the member's true full plan — otherwise those aggregate numbers would quietly leak whether a hidden habit was done. For preset-plan members this threads an optional `restrictToKeys` through `dayComplete`/`computeStreak`/`computeWeekCompletion` (`src/lib/habits.ts`, opt-in — every other caller is unaffected); for custom-plan members it's just a filtered `GoalDef[]` passed into the same `goals.ts` functions everyone else uses, since those already take an explicit goal list. Two different circles can show a completely different subset of one person's habits — visibility is per (user, circle), not a single global setting.
+
+## Nudges
+
+Any circle member can send another member a "you're about to lose your streak" nudge (`src/components/CircleView.tsx`, the button on their row) — but only when both are true, checked server-side in `POST /api/circles/[id]/nudge`, never trusted from the client:
+
+- **Under 2 hours left in the day.** `isNudgeWindowOpen` (`src/lib/nudges.ts`) compares the current time against the next local midnight — same clock every other date computation in this app uses. It's a pure function, unit-testable without touching the system clock.
+- **The recipient hasn't finished today.** Reuses `getCircleForMember`'s already-computed, visibility-filtered `doneToday` for that member in that circle, rather than re-deriving streak logic in the route.
+
+One nudge per (circle, sender, recipient) per day — enforced both by an app-level check and, as a backstop, a DB unique constraint on `Nudge`. There's no push/email notification system in this app, so delivery is in-app only: the recipient's next dashboard load fetches their unseen nudges, shows a dismissible banner naming who nudged them and in which circle, and marks them seen in that same request — so it surfaces once, not on every subsequent visit.
 
 ## Password reset & change
 
@@ -68,7 +77,8 @@ Email delivery goes through [Resend](https://resend.com) (`src/lib/email.ts`) if
 - `src/components/{Tracker,GoalTracker}.tsx` — the dashboard's interactive UI for preset vs. custom plans; both render `HabitGrid.tsx`, the shared sticky-column day grid also used by `CircleView.tsx`.
 - `src/components/AppNav.tsx` — the fixed floating bottom nav (Circles/Settings, theme/sign-out, and a center Dashboard FAB) shown on every authenticated page.
 - `src/app/globals.css` — the design tokens (Charcoal/Red/Sage palette, Nunito, card/nested radii, soft shadow) that drive the whole UI.
-- `prisma/schema.prisma` — `User`, `CheckIn` (preset habits), `Goal`/`GoalEntry` (custom goals), `Circle`/`CircleMember`, `RateLimitHit`, `PasswordResetToken`.
+- `src/lib/nudges.ts` — the pure time-gate (`isNudgeWindowOpen`) behind the circle nudge feature.
+- `prisma/schema.prisma` — `User`, `CheckIn` (preset habits), `Goal`/`GoalEntry` (custom goals), `Circle`/`CircleMember`, `Nudge`, `RateLimitHit`, `PasswordResetToken`.
 
 ## Origin
 

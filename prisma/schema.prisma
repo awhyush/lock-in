@@ -22,6 +22,8 @@ model User {
   ownedCircles         Circle[]              @relation("OwnedCircles")
   circleMemberships    CircleMember[]
   passwordResetTokens  PasswordResetToken[]
+  nudgesSent           Nudge[]               @relation("NudgesSent")
+  nudgesReceived       Nudge[]               @relation("NudgesReceived")
 }
 
 /** A single-use, short-lived token for the forgot-password flow. Only a hash of the token
@@ -76,7 +78,30 @@ model Circle {
   ownerId    String
   owner      User           @relation("OwnedCircles", fields: [ownerId], references: [id], onDelete: Cascade)
   members    CircleMember[]
+  nudges     Nudge[]
   createdAt  DateTime       @default(now())
+}
+
+/** A "hey, you're about to lose your streak" ping from one circle member to another. Only
+ * ever creatable server-side when the recipient hasn't finished today's requirement AND
+ * there are under NUDGE_WINDOW_HOURS left in the day (src/lib/nudges.ts) — never trusted
+ * from the client. `date` + the unique constraint cap it at one nudge per pair per circle
+ * per day. `seenAt` is set the moment the recipient's dashboard loads it, so it surfaces
+ * as a banner exactly once. */
+model Nudge {
+  id         String    @id @default(cuid())
+  circleId   String
+  circle     Circle    @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  fromUserId String
+  fromUser   User      @relation("NudgesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User      @relation("NudgesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+  date       String
+  seenAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([circleId, fromUserId, toUserId, date])
+  @@index([toUserId, date])
 }
 
 model CircleMember {

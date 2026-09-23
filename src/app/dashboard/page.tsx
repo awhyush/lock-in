@@ -6,6 +6,7 @@ import { Tracker } from "@/components/Tracker";
 import { GoalTracker } from "@/components/GoalTracker";
 import { DEFAULT_HISTORY_DAYS, HABIT_LABELS, dateKey, parseStoredPlan, resolveTargets, type CheckInData } from "@/lib/habits";
 import type { GoalDayData, GoalDef } from "@/lib/goals";
+import type { NudgeNotice } from "@/components/NudgeBanner";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -19,6 +20,23 @@ const DEFAULT_GOAL_LABELS = [
   HABIT_LABELS.build,
   HABIT_LABELS.movement,
 ];
+
+/** Fetches today's not-yet-seen nudges for this user and marks them seen in the same
+ * request, so the banner surfaces exactly once — the next dashboard load won't show it again. */
+async function getAndMarkSeenNudges(userId: string, todayKey: string): Promise<NudgeNotice[]> {
+  const nudges = await prisma.nudge.findMany({
+    where: { toUserId: userId, date: todayKey, seenAt: null },
+    include: { fromUser: { select: { name: true } }, circle: { select: { name: true } } },
+  });
+  if (nudges.length === 0) return [];
+
+  await prisma.nudge.updateMany({
+    where: { id: { in: nudges.map((n) => n.id) } },
+    data: { seenAt: new Date() },
+  });
+
+  return nudges.map((n) => ({ id: n.id, fromName: n.fromUser.name, circleName: n.circle.name }));
+}
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -37,6 +55,7 @@ export default async function DashboardPage() {
   const fromKey = dateKey(fromDate);
 
   const { mode, custom } = parseStoredPlan(user.intensity, user.customTargets);
+  const nudges = await getAndMarkSeenNudges(user.id, todayKey);
 
   if (mode === "custom") {
     let goals = await prisma.goal.findMany({ where: { userId: user.id }, orderBy: { sortOrder: "asc" } });
@@ -70,6 +89,7 @@ export default async function DashboardPage() {
         goals={goalDefs}
         initialHistory={history}
         initialLoadedDays={DEFAULT_HISTORY_DAYS}
+        nudges={nudges}
       />
     );
   }
@@ -103,6 +123,7 @@ export default async function DashboardPage() {
       todayLabel={todayLabel}
       initialHistory={history}
       initialLoadedDays={DEFAULT_HISTORY_DAYS}
+      nudges={nudges}
     />
   );
 }

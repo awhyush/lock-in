@@ -13,6 +13,7 @@ import {
 import { Avatar } from "@/components/Avatar";
 import { AppNav } from "@/components/AppNav";
 import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
+import { NudgeBanner, type NudgeNotice } from "@/components/NudgeBanner";
 
 export function GoalTracker({
   name,
@@ -21,6 +22,7 @@ export function GoalTracker({
   goals,
   initialHistory,
   initialLoadedDays,
+  nudges,
 }: {
   name: string;
   todayKey: string;
@@ -28,6 +30,7 @@ export function GoalTracker({
   goals: GoalDef[];
   initialHistory: Record<string, GoalDayData>;
   initialLoadedDays: number;
+  nudges: NudgeNotice[];
 }) {
   const [history, setHistory] = useState<Record<string, GoalDayData>>(initialHistory);
   const [status, setStatus] = useState<string | null>(null);
@@ -132,6 +135,8 @@ export function GoalTracker({
           </div>
           <Avatar name={name} />
         </header>
+
+        <NudgeBanner nudges={nudges} />
 
         <section className="relative overflow-hidden rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sage/20" />
