@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { dateKey } from "@/lib/habits";
+import { HISTORY_RANGE_OPTIONS, dateKey } from "@/lib/habits";
 import { HabitGrid } from "@/components/HabitGrid";
 import { AppNav } from "@/components/AppNav";
 import type { CircleDetail, CircleMemberView } from "@/lib/circles";
@@ -18,7 +18,7 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
   const days = useMemo(() => {
     const base = new Date(`${circle.todayKey}T00:00:00`);
     const arr: { key: string; label: string }[] = [];
-    for (let i = 13; i >= 0; i--) {
+    for (let i = HISTORY_RANGE_OPTIONS[0] - 1; i >= 0; i--) {
       const d = new Date(base);
       d.setDate(d.getDate() - i);
       arr.push({ key: dateKey(d), label: d.toLocaleDateString("en-US", { weekday: "narrow" }) });

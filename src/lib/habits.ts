@@ -180,7 +180,7 @@ export type CheckInData = {
 export const DEFAULT_HISTORY_DAYS = 60;
 export const STREAK_LOOKBACK_DAYS = 400;
 export const MAX_HISTORY_DAYS = 400;
-export const HISTORY_RANGE_OPTIONS = [7, 14, 30, 90] as const;
+export const HISTORY_RANGE_OPTIONS = [10, 14, 30, 90] as const;
 
 export const EMPTY_CHECKIN: CheckInData = {
   exercise: false,
