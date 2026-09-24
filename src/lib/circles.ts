@@ -24,7 +24,7 @@ import {
 import { isNudgeWindowOpen } from "@/lib/nudges";
 import type { HabitGridRow } from "@/components/HabitGrid";
 
-const VISIBLE_DAYS = HISTORY_RANGE_OPTIONS[0]; // 14 — circle members only ever see this much
+const VISIBLE_DAYS = HISTORY_RANGE_OPTIONS[0]; // 7 — circle members only ever see this much
 
 export type CircleKeyOption = { key: string; label: string };
 

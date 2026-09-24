@@ -31,7 +31,7 @@ export default async function Home() {
       </nav>
 
       <section className="relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] border border-line bg-surface p-8 shadow-soft">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-sage/20" />
+        <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 translate-x-16 -translate-y-16 rounded-full bg-sage/20" />
 
         <p className="relative font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Daily reset tracker</p>
         <h1 className="relative max-w-xl font-black text-5xl leading-[1.02] tracking-tight text-ink text-balance">

@@ -139,7 +139,7 @@ export function GoalTracker({
         <NudgeBanner nudges={nudges} />
 
         <section className="relative overflow-hidden rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sage/20" />
+          <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 translate-x-10 -translate-y-10 rounded-full bg-sage/20" />
 
           <p className="relative mb-4 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Today</p>
 
