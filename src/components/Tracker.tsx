@@ -15,7 +15,7 @@ import {
   type HabitKey,
   type HabitTarget,
 } from "@/lib/habits";
-import { Avatar } from "@/components/Avatar";
+import { AvatarMenu } from "@/components/AvatarMenu";
 import { AppNav } from "@/components/AppNav";
 import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
 import { NudgeBanner, type NudgeNotice } from "@/components/NudgeBanner";
@@ -142,7 +142,7 @@ export function Tracker({
             <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">{todayLabel}</p>
             <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">Hey {firstName}</h1>
           </div>
-          <Avatar name={name} />
+          <AvatarMenu name={name} />
         </header>
 
         <NudgeBanner nudges={nudges} />
