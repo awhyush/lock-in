@@ -12,7 +12,8 @@ model User {
   id                   String                @id @default(cuid())
   name                 String
   email                String                @unique
-  passwordHash         String
+  /// Null for accounts created via Google OAuth that have never set a password.
+  passwordHash         String?
   intensity            String                @default("standard")
   customTargets        String?
   onboarded            Boolean               @default(false)

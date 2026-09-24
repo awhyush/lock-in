@@ -17,5 +17,5 @@ export default async function ProfilePage() {
   if (!user) redirect("/login");
   if (!user.onboarded) redirect("/onboarding");
 
-  return <ProfileView name={user.name} email={user.email} />;
+  return <ProfileView name={user.name} email={user.email} hasPassword={Boolean(user.passwordHash)} />;
 }

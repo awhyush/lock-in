@@ -2,7 +2,7 @@
 
 A habit tracker for a personal reset: accounts, per-user intensity ("how much are you actually investing right now"), a personalized daily plan, and a streak view with a 14/30/90-day filter.
 
-Built with Next.js (App Router), Prisma + Postgres, and NextAuth (Credentials).
+Built with Next.js (App Router), Prisma + Postgres, and NextAuth (Credentials + optional Google OAuth).
 
 ## Running it
 
@@ -19,7 +19,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## How it works
 
-1. **Sign up** with name, email, password (hashed with bcrypt, stored in Postgres via Prisma). Already signed in? Change your password anytime from `/profile`, which requires your current password — see [Password reset & change](#password-reset--change) below.
+1. **Sign up** with name, email, password (hashed with bcrypt, stored in Postgres via Prisma) — or with Google, if it's configured, see [Google sign-in](#google-sign-in) below. Already signed in? Change your password anytime from `/profile`, which requires your current password (or, for a Google-only account with no password yet, just sets one) — see [Password reset & change](#password-reset--change) below.
 2. **Onboarding**: pick a plan — Light, Standard, Ambitious, or Custom — which decides every habit's target (`src/lib/habits.ts`). **Custom** is different from the other three: instead of retargeting the same 5 fixed habits, you define your own goals (at least one, as many as you want), each with its own tracking type — see [Custom goal types](#custom-goal-types) below. Changeable anytime from `/settings`.
 3. **Dashboard**: greets you by name, shows today's habits/goals, a running streak (computed over a real 60-day window under the hood, not just what's on screen), and a history strip you can widen to 14/30/90 days — one row per habit (preset plans, `src/components/Tracker.tsx`) or per goal (custom plans, `src/components/GoalTracker.tsx`). Preset plans also get weekday rules (Friday's lighter, Saturday's just exercise, Sunday's recovery); custom goals are required every day, no variation. Every tap writes straight to your account via `POST /api/checkin` or `POST /api/goal-entries`.
 4. **Circles**: invite friends via a shareable code, see each other's last-14-day grid (done/not-done only — never exact counts), sorted by streak or this-week %, with a quiet "still to go today" nudge. A circle happily mixes preset- and custom-plan members — each renders their own row set. Each member also controls, per circle, which of their own habits/goals are visible there — see [Per-circle visibility](#per-circle-visibility) below. In the last 2 hours of the day, members who haven't finished can be nudged — see [Nudges](#nudges) below.
@@ -49,6 +49,14 @@ Any circle member can send another member a "you're about to lose your streak" n
 
 One nudge per (circle, sender, recipient) per day — enforced both by an app-level check and, as a backstop, a DB unique constraint on `Nudge`. There's no push/email notification system in this app, so delivery is in-app only: the recipient's next dashboard load fetches their unseen nudges, shows a dismissible banner naming who nudged them and in which circle, and marks them seen in that same request — so it surfaces once, not on every subsequent visit.
 
+## Google sign-in
+
+Optional — the "Continue with Google" button on `/login` and `/signup` only renders when `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` are set (`src/auth.ts` registers the provider conditionally, same graceful-degradation pattern as the Resend email setup). Without them, nothing changes: Credentials sign-in works exactly as before.
+
+No database adapter is used here (this app always re-fetches session/plan data fresh from Prisma server-side, never trusts the JWT for anything but the user id) — so instead of Auth.js's own Account-linking tables, a Google sign-in is linked to a `User` row by hand in the `jwt` callback: look up by email, reuse the row if it exists, create one (with `passwordHash: null`, `onboarded: false`) if it doesn't. Matching by email is safe because Google has already verified that email belongs to whoever is signing in — so an existing password-based account with the same email is reused, not duplicated, and a brand-new Google user lands in `/onboarding` exactly like a fresh signup would.
+
+`User.passwordHash` is nullable to support this. The Credentials provider's `authorize()` rejects sign-in attempts for a null-password account rather than crashing on it, and `/profile`'s password form switches from "Change password" (requires the current one) to "Set a password" (doesn't — there's nothing to verify yet) based on whether the signed-in user actually has one.
+
 ## Password reset & change
 
 - **Change password** (`/profile`, logged in — active): `POST /api/account/change-password` always operates on `session.user.id` from the server-side session — never a client-supplied id — and requires the current password to verify before setting a new one. This is the only password-change path right now.
@@ -64,6 +72,7 @@ Email delivery goes through [Resend](https://resend.com) (`src/lib/email.ts`) if
    - `AUTH_SECRET` — generate a fresh one, don't reuse your local `.env`'s value: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
    - `NEXT_PUBLIC_SITE_URL` — your Vercel deployment URL (e.g. `https://lock-in.vercel.app`); you can add this after the first deploy once you know the URL, then redeploy. It's also what the reset-password link points at, so forgot-password won't produce a usable link until this is set.
    - `RESEND_API_KEY` / `RESEND_FROM_EMAIL` — optional, but without them forgot-password can't actually deliver an email in production (it'll only log the link server-side, which nobody but you can see). Get a key at [resend.com](https://resend.com).
+   - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` — optional, adds the "Continue with Google" button. Create an OAuth client at [console.cloud.google.com](https://console.cloud.google.com) (APIs & Services → Credentials → Create Credentials → OAuth client ID → Web application) with an authorized redirect URI of `https://<your-vercel-domain>/api/auth/callback/google`. Since `/login` and `/signup` are statically prerendered, adding or changing these after the first deploy needs a redeploy to take effect — same as any Vercel env var change.
 4. Deploy. `npm run build` runs `prisma migrate deploy` before building (see `package.json`) — Vercel never actually invokes `npm start` for serverless deploys, so migrations have to happen at build time instead. The schema is created/updated automatically on every deploy; no manual migration step needed.
 
 ## Structure
@@ -71,11 +80,12 @@ Email delivery goes through [Resend](https://resend.com) (`src/lib/email.ts`) if
 - `src/lib/habits.ts` — the fixed 5-habit/weekday config and streak logic (preset plans), shared by server and client.
 - `src/lib/goals.ts` — the parallel, day-agnostic streak logic for custom-plan user-defined goals, including the checkbox/duration/counter type system.
 - `src/lib/circles.ts` — loads a circle's detail for a viewer, resolving each member's rows/streak from either `habits.ts` or `goals.ts` depending on *their* plan, filtered through that member's per-circle visibility choice.
-- `src/auth.ts` — NextAuth config (Credentials provider, JWT sessions).
+- `src/auth.ts` — NextAuth config: Credentials provider, an optional Google provider (registered only when configured), JWT sessions, and the hand-rolled Google-to-`User`-row linking (no database adapter).
+- `src/components/GoogleSignInButton.tsx` — the "Continue with Google" button shared by `LoginForm.tsx` and `SignupForm.tsx`, rendered only when the parent server component confirms Google is configured.
 - `src/app/api/*` — signup, onboarding (also reconciles a custom plan's goal set), check-in/goal-entries, history/goal-history, circles (including per-circle visibility), and forgot/reset/change-password endpoints.
 - `src/app/{login,signup,forgot-password,reset-password,onboarding,dashboard,settings,profile,circles}` — the pages.
 - `src/components/{Tracker,GoalTracker}.tsx` — the dashboard's interactive UI for preset vs. custom plans; both render `HabitGrid.tsx`, the shared sticky-column day grid also used by `CircleView.tsx`.
-- `src/components/AppNav.tsx` — the fixed floating bottom nav (Circles/Settings, theme/sign-out, and a center Dashboard FAB) shown on every authenticated page.
+- `src/components/AppNav.tsx` — the fixed floating bottom nav (Home/Circles/Plan/Profile, four labeled tabs) shown on every authenticated page. Theme toggle and sign-out live on the Profile page instead.
 - `src/app/globals.css` — the design tokens (Charcoal/Red/Sage palette, Nunito, card/nested radii, soft shadow) that drive the whole UI.
 - `src/lib/nudges.ts` — the pure time-gate (`isNudgeWindowOpen`) behind the circle nudge feature.
 - `prisma/schema.prisma` — `User`, `CheckIn` (preset habits), `Goal`/`GoalEntry` (custom goals), `Circle`/`CircleMember`, `Nudge`, `RateLimitHit`, `PasswordResetToken`.

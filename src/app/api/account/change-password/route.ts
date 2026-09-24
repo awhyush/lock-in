@@ -22,9 +22,6 @@ export async function POST(req: Request) {
   const currentPassword = typeof body?.currentPassword === "string" ? body.currentPassword : "";
   const newPassword = typeof body?.newPassword === "string" ? body.newPassword : "";
 
-  if (!currentPassword) {
-    return NextResponse.json({ error: "Current password is required." }, { status: 400 });
-  }
   if (newPassword.length < 8) {
     return NextResponse.json({ error: "New password must be at least 8 characters." }, { status: 400 });
   }
@@ -36,9 +33,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
-  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!valid) {
-    return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
+  // A user with no passwordHash yet (a Google-only account) has nothing to verify against —
+  // this is "set a password" for them, not "change" one, so skip the current-password check.
+  if (user.passwordHash) {
+    if (!currentPassword) {
+      return NextResponse.json({ error: "Current password is required." }, { status: 400 });
+    }
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
+    }
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 12);

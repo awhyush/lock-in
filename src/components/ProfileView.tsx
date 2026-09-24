@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
@@ -60,7 +61,8 @@ function ThemeRow() {
   );
 }
 
-export function ProfileView({ name, email }: { name: string; email: string }) {
+export function ProfileView({ name, email, hasPassword }: { name: string; email: string; hasPassword: boolean }) {
+  const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -96,6 +98,7 @@ export function ProfileView({ name, email }: { name: string; email: string }) {
     setNewPassword("");
     setConfirm("");
     setSuccess(true);
+    if (!hasPassword) router.refresh(); // flips the form from "set" to "change" copy
   }
 
   return (
@@ -133,19 +136,29 @@ export function ProfileView({ name, email }: { name: string; email: string }) {
         </section>
 
         <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
-          <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Change password</p>
+          <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">
+            {hasPassword ? "Change password" : "Set a password"}
+          </p>
+          {!hasPassword && (
+            <p className="mb-4 text-sm text-muted">
+              You signed up with Google, so there&apos;s no password yet. Set one to also be able to sign in
+              directly.
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
-              Current password
-              <input
-                type="password"
-                required
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className={inputClass}
-              />
-            </label>
+            {hasPassword && (
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
+                Current password
+                <input
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className={inputClass}
+                />
+              </label>
+            )}
             <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
               New password
               <input
@@ -171,13 +184,13 @@ export function ProfileView({ name, email }: { name: string; email: string }) {
               />
             </label>
             {error && <p className="text-sm text-warn">{error}</p>}
-            {success && <p className="text-sm text-good">Password updated.</p>}
+            {success && <p className="text-sm text-good">{hasPassword ? "Password updated." : "Password set."}</p>}
             <button
               type="submit"
               disabled={loading}
               className="mt-1 rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-ink disabled:opacity-60"
             >
-              {loading ? "Saving..." : "Update password"}
+              {loading ? "Saving..." : hasPassword ? "Update password" : "Set password"}
             </button>
           </form>
         </section>

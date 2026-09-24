@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { AuthCard } from "@/components/AuthCard";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 const inputClass =
   "w-full rounded-full border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
 
-export function SignupForm() {
+export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -47,6 +48,16 @@ export function SignupForm() {
 
   return (
     <AuthCard eyebrow="Let's lock in" title="Create account">
+      {googleEnabled && (
+        <>
+          <GoogleSignInButton callbackUrl="/onboarding" />
+          <div className="my-4 flex items-center gap-3 text-xs font-medium text-muted">
+            <span className="h-px flex-1 bg-line" />
+            or
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           Name
