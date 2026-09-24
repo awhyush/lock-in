@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const DISMISSED_KEY = "lockin-install-dismissed";
+const MOBILE_QUERY = "(max-width: 767px)";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -17,6 +18,10 @@ export function InstallPrompt() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
+
+    // "Install" only makes sense as an app-like, home-screen thing — pointless clutter on
+    // desktop, where the browser (or Chrome/Edge's own omnibox install icon) already covers it.
+    if (!window.matchMedia(MOBILE_QUERY).matches) return;
 
     let dismissed = false;
     try {
@@ -60,7 +65,7 @@ export function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+96px)]">
+    <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+104px)]">
       <div className="flex w-full max-w-sm items-center gap-3 rounded-[1.5rem] border border-line bg-surface px-4 py-3 shadow-soft">
         <span className="flex-1 text-sm text-ink">Install The Lock-In for quicker access.</span>
         <button
