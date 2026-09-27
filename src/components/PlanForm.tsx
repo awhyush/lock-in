@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PLAN_INFO, PLAN_MODES, type PlanMode } from "@/lib/habits";
+import { DAY_RULES, HABIT_LABELS, PLAN_INFO, PLAN_MODES, type HabitKey, type PlanMode, type RestDays } from "@/lib/habits";
 import {
   GOAL_COUNTER_BOUNDS,
   GOAL_DURATION_BOUNDS,
@@ -23,20 +23,35 @@ const TYPE_OPTIONS: { type: GoalType; label: string }[] = [
   { type: "counter", label: "Counter" },
 ];
 
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** Which weekdays each habit is required on by DAY_RULES, in the order the habit first
+ * appears (Mon's full required list first) — the only cells worth a rest-day toggle, since
+ * everything else is already optional every day regardless of any opt-out. */
+const REQUIRED_WEEKDAYS_BY_HABIT: Partial<Record<HabitKey, number[]>> = {};
+for (let d = 0; d <= 6; d++) {
+  for (const key of DAY_RULES[d].required) {
+    (REQUIRED_WEEKDAYS_BY_HABIT[key] ??= []).push(d);
+  }
+}
+
 export function PlanForm({
   name,
   mode,
   initialPlanMode,
   initialGoals,
+  initialRestDays,
 }: {
   name: string;
   mode: "onboarding" | "settings";
   initialPlanMode: PlanMode;
   initialGoals: GoalDef[];
+  initialRestDays: RestDays;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<PlanMode>(initialPlanMode);
   const [goals, setGoals] = useState<GoalDraft[]>(initialGoals);
+  const [restDays, setRestDays] = useState<RestDays>(initialRestDays);
   const [newGoalLabel, setNewGoalLabel] = useState("");
   const [newGoalType, setNewGoalType] = useState<GoalType>("checkbox");
   const [newGoalTarget, setNewGoalTarget] = useState(GOAL_DURATION_BOUNDS.min);
@@ -62,6 +77,17 @@ export function PlanForm({
     setGoals((g) => g.filter((_, i) => i !== index));
   }
 
+  function toggleRestDay(key: HabitKey, day: number) {
+    setRestDays((rd) => {
+      const current = rd[key] ?? [];
+      const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day];
+      const copy = { ...rd };
+      if (next.length) copy[key] = next;
+      else delete copy[key];
+      return copy;
+    });
+  }
+
   async function handleSubmit() {
     setLoading(true);
     setError(null);
@@ -71,6 +97,7 @@ export function PlanForm({
       body: JSON.stringify({
         mode: selected,
         goals: selected === "custom" ? goals.filter((g) => g.label.trim()) : undefined,
+        restDays: selected !== "custom" ? restDays : undefined,
       }),
     });
     setLoading(false);
@@ -212,6 +239,42 @@ export function PlanForm({
                         </ul>
                       ) : (
                         <p className="px-1 text-xs text-muted">Add at least one goal to track.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {key !== "custom" && active && (
+                    <div className="mt-2 flex flex-col gap-3 rounded-[1.5rem] border border-line bg-surface-2 p-4">
+                      <div>
+                        <p className="text-sm font-bold text-ink">Rest days</p>
+                        <p className="text-xs text-muted">
+                          Opt out of a habit on specific days — those days won&apos;t count against your streak.
+                        </p>
+                      </div>
+                      {(Object.entries(REQUIRED_WEEKDAYS_BY_HABIT) as [HabitKey, number[]][]).map(
+                        ([habitKey, weekdays]) => (
+                          <div key={habitKey} className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-medium text-ink">{HABIT_LABELS[habitKey]}</span>
+                            <div className="flex items-center gap-1">
+                              {weekdays.map((day) => {
+                                const excused = restDays[habitKey]?.includes(day) ?? false;
+                                return (
+                                  <button
+                                    key={day}
+                                    type="button"
+                                    onClick={() => toggleRestDay(habitKey, day)}
+                                    aria-pressed={!excused}
+                                    className={`rounded-full border px-2 py-1 text-[10px] font-bold uppercase ${
+                                      excused ? "border-line text-muted" : "border-accent bg-accent text-accent-ink"
+                                    }`}
+                                  >
+                                    {WEEKDAY_SHORT[day]}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ),
                       )}
                     </div>
                   )}

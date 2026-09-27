@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { parseStoredPlan } from "@/lib/habits";
+import { parseRestDays, parseStoredPlan } from "@/lib/habits";
 import { PlanForm } from "@/components/PlanForm";
 
 export const metadata: Metadata = {
@@ -32,6 +32,7 @@ export default async function SettingsPage() {
         type: g.type as "checkbox" | "duration" | "counter",
         target: g.target,
       }))}
+      initialRestDays={parseRestDays(user.restDays) ?? {}}
     />
   );
 }

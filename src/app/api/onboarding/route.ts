@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { PLAN_MODES, type PlanMode } from "@/lib/habits";
+import { HABIT_KEYS, PLAN_MODES, type HabitKey, type PlanMode, type RestDays } from "@/lib/habits";
 import {
   GOAL_COUNTER_BOUNDS,
   GOAL_DURATION_BOUNDS,
@@ -42,6 +42,23 @@ function cleanGoalInput(input: unknown): GoalInput[] | null {
     .filter((g): g is GoalInput => g !== null)
     .slice(0, MAX_GOALS);
   return cleaned.length > 0 ? cleaned : null;
+}
+
+/** Keeps only known HabitKeys and in-range weekday ints — same defensive-parse shape as
+ * cleanGoalInput above and parseRestDays in lib/habits.ts. Garbage in just becomes "no
+ * exception for that key" rather than a rejection, since an exception is inert unless it
+ * happens to match a day DAY_RULES actually requires that habit on. */
+function cleanRestDays(input: unknown): RestDays | null {
+  if (typeof input !== "object" || input === null) return null;
+  const rec = input as Record<string, unknown>;
+  const result: RestDays = {};
+  for (const key of HABIT_KEYS) {
+    const days = rec[key];
+    if (!Array.isArray(days)) continue;
+    const valid = [...new Set(days.filter((d): d is number => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
+    if (valid.length) result[key as HabitKey] = valid;
+  }
+  return Object.keys(result).length ? result : null;
 }
 
 /** Replaces a user's Goal set with exactly what was submitted: updates goals that still
@@ -88,7 +105,12 @@ export async function POST(req: Request) {
     await reconcileGoals(session.user.id, goals);
   }
 
-  await prisma.user.update({ where: { id: session.user.id }, data: { intensity: mode, onboarded: true } });
+  const restDays = mode !== "custom" ? cleanRestDays(body?.restDays) : null;
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { intensity: mode, onboarded: true, restDays: restDays ? JSON.stringify(restDays) : null },
+  });
 
   return NextResponse.json({ ok: true });
 }

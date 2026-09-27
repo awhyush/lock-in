@@ -158,11 +158,52 @@ export const DAY_RULES: Record<number, DayRule> = {
   },
 };
 
-/** A short line describing what a DayRule asks for — powers the "Weekly plan" list. */
-export function describeDayRule(rule: DayRule): string {
+/** A short line describing what a DayRule asks for — powers the "Weekly plan" list.
+ * `requiredOverride`, when given, replaces `rule.required` (e.g. with effectiveRequiredKeys
+ * once a user has excused themselves from part of it) while keeping the same note/fallback
+ * copy — the note is flavor text, not a strict requirement, so it's left as-is either way. */
+export function describeDayRule(rule: DayRule, requiredOverride?: HabitKey[]): string {
+  const required = requiredOverride ?? rule.required;
   if (rule.note) return rule.note;
-  if (rule.required.length === 0) return "Nothing required — recovery day.";
-  return rule.required.map((k) => HABIT_LABELS[k]).join(", ");
+  if (required.length === 0) return "Nothing required — recovery day.";
+  return required.map((k) => HABIT_LABELS[k]).join(", ");
+}
+
+/** A user's personal exceptions to DAY_RULES: weekdays (0-6) a habit is excused from being
+ * required on, e.g. { exercise: [6] } opts out of Saturday's exercise requirement. Only
+ * meaningful for preset plans — "custom" goals have no weekday variation. */
+export type RestDays = Partial<Record<HabitKey, number[]>>;
+
+/** Parses the User.restDays JSON column. Same defensive shape as parseVisibleKeys in
+ * lib/circles.ts: unknown/invalid input, unknown keys, and out-of-range days are all
+ * dropped rather than rejected; an empty result collapses to null (no exceptions). */
+export function parseRestDays(raw: string | null): RestDays | null {
+  if (!raw) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== "object" || parsed === null) return null;
+
+  const result: RestDays = {};
+  for (const key of HABIT_KEYS) {
+    const days = (parsed as Record<string, unknown>)[key];
+    if (!Array.isArray(days)) continue;
+    const valid = [...new Set(days.filter((d): d is number => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
+    if (valid.length) result[key] = valid;
+  }
+  return Object.keys(result).length ? result : null;
+}
+
+/** DAY_RULES[weekday].required minus whatever this user has personally excused themselves
+ * from that weekday — the single source of truth the UI uses instead of reading DAY_RULES
+ * directly, so "required today" always matches what dayComplete/computeStreak enforce. */
+export function effectiveRequiredKeys(weekday: number, restDays?: RestDays | null): HabitKey[] {
+  const base = (DAY_RULES[weekday] ?? DAY_RULES[1]).required;
+  if (!restDays) return base;
+  return base.filter((k) => !restDays[k]?.includes(weekday));
 }
 
 export type CheckInData = {
@@ -207,10 +248,18 @@ export function habitDone(data: CheckInData | undefined, key: HabitKey): boolean
 /** true = every required habit met, false = a required habit is missing,
  * null = nothing was required that day (doesn't break or extend a streak).
  * `restrictToKeys`, when given, narrows "required" to only that subset first — used to
- * compute a circle-specific view where the member has hidden some habits from that circle. */
-export function dayComplete(data: CheckInData | undefined, weekday: number, restrictToKeys?: HabitKey[]): boolean | null {
+ * compute a circle-specific view where the member has hidden some habits from that circle.
+ * `restDays`, when given, further excuses whatever this user has personally opted out of
+ * for this specific weekday (see RestDays/effectiveRequiredKeys above). */
+export function dayComplete(
+  data: CheckInData | undefined,
+  weekday: number,
+  restrictToKeys?: HabitKey[],
+  restDays?: RestDays | null,
+): boolean | null {
   let required = (DAY_RULES[weekday] ?? DAY_RULES[1]).required;
   if (restrictToKeys) required = required.filter((k) => restrictToKeys.includes(k));
+  if (restDays) required = required.filter((k) => !restDays[k]?.includes(weekday));
   if (!data) return required.length === 0 ? null : false;
   return required.every((k) => habitDone(data, k));
 }
@@ -219,12 +268,13 @@ export function computeStreak(
   historyByDate: Record<string, CheckInData>,
   today: Date,
   restrictToKeys?: HabitKey[],
+  restDays?: RestDays | null,
 ): number {
   let streak = 0;
   for (let i = 0; i < STREAK_LOOKBACK_DAYS; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay(), restrictToKeys);
+    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay(), restrictToKeys, restDays);
     // today not finished yet doesn't break the streak, it just doesn't add to it
     if (i === 0 && complete !== true) continue;
     if (complete === false) break;
@@ -240,13 +290,14 @@ export function computeWeekCompletion(
   historyByDate: Record<string, CheckInData>,
   today: Date,
   restrictToKeys?: HabitKey[],
+  restDays?: RestDays | null,
 ): number | null {
   let eligible = 0;
   let completed = 0;
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay(), restrictToKeys);
+    const complete = dayComplete(historyByDate[dateKey(d)], d.getDay(), restrictToKeys, restDays);
     if (complete === null) continue;
     eligible++;
     if (complete) completed++;

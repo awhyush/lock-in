@@ -9,6 +9,7 @@ import {
   dateKey,
   dayComplete,
   habitDone,
+  parseRestDays,
   parseStoredPlan,
   type CheckInData,
   type HabitKey,
@@ -103,7 +104,7 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
     where: { id: circleId },
     include: {
       members: {
-        include: { user: { select: { id: true, name: true, intensity: true, customTargets: true } } },
+        include: { user: { select: { id: true, name: true, intensity: true, customTargets: true, restDays: true } } },
       },
     },
   });
@@ -210,10 +211,11 @@ export async function getCircleForMember(circleId: string, viewerId: string): Pr
       HABIT_KEYS.map((key) => ({ key })),
       visibleKeys,
     ).map((h) => h.key as HabitKey);
+    const restDays = parseRestDays(m.user.restDays);
     const fullHistory = checkInHistoryByUser.get(m.user.id) ?? {};
-    const streak = computeStreak(fullHistory, today, visibleHabitKeys);
-    const weekPercent = computeWeekCompletion(fullHistory, today, visibleHabitKeys);
-    const doneToday = dayComplete(fullHistory[todayKey], today.getDay(), visibleHabitKeys) !== false;
+    const streak = computeStreak(fullHistory, today, visibleHabitKeys, restDays);
+    const weekPercent = computeWeekCompletion(fullHistory, today, visibleHabitKeys, restDays);
+    const doneToday = dayComplete(fullHistory[todayKey], today.getDay(), visibleHabitKeys, restDays) !== false;
     const visibleHistory = trimToVisible(fullHistory, visibleFromKey);
     const rows: HabitGridRow[] = visibleHabitKeys.map((key) => ({
       key,

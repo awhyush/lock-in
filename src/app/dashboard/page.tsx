@@ -4,7 +4,15 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Tracker } from "@/components/Tracker";
 import { GoalTracker } from "@/components/GoalTracker";
-import { DEFAULT_HISTORY_DAYS, HABIT_LABELS, dateKey, parseStoredPlan, resolveTargets, type CheckInData } from "@/lib/habits";
+import {
+  DEFAULT_HISTORY_DAYS,
+  HABIT_LABELS,
+  dateKey,
+  parseRestDays,
+  parseStoredPlan,
+  resolveTargets,
+  type CheckInData,
+} from "@/lib/habits";
 import type { GoalDayData, GoalDef } from "@/lib/goals";
 import type { NudgeNotice } from "@/components/NudgeBanner";
 
@@ -114,6 +122,7 @@ export default async function DashboardPage() {
   }
 
   const targets = resolveTargets(mode, custom);
+  const restDays = parseRestDays(user.restDays);
 
   return (
     <Tracker
@@ -124,6 +133,7 @@ export default async function DashboardPage() {
       initialHistory={history}
       initialLoadedDays={DEFAULT_HISTORY_DAYS}
       nudges={nudges}
+      restDays={restDays}
     />
   );
 }

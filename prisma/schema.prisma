@@ -16,6 +16,9 @@ model User {
   passwordHash         String?
   intensity            String                @default("standard")
   customTargets        String?
+  /// JSON: Partial<Record<HabitKey, number[]>> — weekdays (0-6) a preset-plan habit is excused
+  /// from being required on. Null means no exceptions. Unused when intensity is "custom".
+  restDays             String?
   onboarded            Boolean               @default(false)
   createdAt            DateTime              @default(now())
   checkIns             CheckIn[]

@@ -9,11 +9,13 @@ import {
   computeWeekCompletion,
   dateKey,
   describeDayRule,
+  effectiveRequiredKeys,
   habitDone,
   habitTargetText,
   type CheckInData,
   type HabitKey,
   type HabitTarget,
+  type RestDays,
 } from "@/lib/habits";
 import { AvatarMenu } from "@/components/AvatarMenu";
 import { AppNav } from "@/components/AppNav";
@@ -35,6 +37,7 @@ export function Tracker({
   initialHistory,
   initialLoadedDays,
   nudges,
+  restDays,
 }: {
   name: string;
   targets: Record<HabitKey, HabitTarget>;
@@ -43,6 +46,7 @@ export function Tracker({
   initialHistory: Record<string, CheckInData>;
   initialLoadedDays: number;
   nudges: NudgeNotice[];
+  restDays: RestDays | null;
 }) {
   const [history, setHistory] = useState<Record<string, CheckInData>>(initialHistory);
   const [status, setStatus] = useState<string | null>(null);
@@ -54,6 +58,7 @@ export function Tracker({
 
   const weekday = useMemo(() => new Date(`${todayKey}T00:00:00`).getDay(), [todayKey]);
   const rule = DAY_RULES[weekday];
+  const requiredToday = useMemo(() => effectiveRequiredKeys(weekday, restDays), [weekday, restDays]);
   const today = history[todayKey] ?? { exercise: false, study: false, apply: 0, build: false, movement: false, noNap: false };
 
   const days = useMemo(() => {
@@ -85,13 +90,13 @@ export function Tracker({
   );
 
   const streak = useMemo(
-    () => computeStreak(history, new Date(`${todayKey}T00:00:00`)),
-    [history, todayKey],
+    () => computeStreak(history, new Date(`${todayKey}T00:00:00`), undefined, restDays),
+    [history, todayKey, restDays],
   );
 
   const weekPercent = useMemo(
-    () => computeWeekCompletion(history, new Date(`${todayKey}T00:00:00`)),
-    [history, todayKey],
+    () => computeWeekCompletion(history, new Date(`${todayKey}T00:00:00`), undefined, restDays),
+    [history, todayKey, restDays],
   );
 
   async function selectRange(n: number) {
@@ -160,7 +165,7 @@ export function Tracker({
           <div className="relative flex flex-col gap-2">
             {BOOLEAN_KEYS.map((key) => {
               const done = habitDone(today, key);
-              const required = rule.required.includes(key);
+              const required = requiredToday.includes(key);
               return (
                 <FeedRow
                   key={key}
@@ -178,6 +183,9 @@ export function Tracker({
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] font-bold text-ink">{targets.apply.label}</span>
                 <span className="block text-xs text-muted">{habitTargetText(targets.apply)}</span>
+              </span>
+              <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+                {requiredToday.includes("apply") ? "core" : "bonus"}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -255,7 +263,9 @@ export function Tracker({
             return (
               <div key={d} className="flex items-center justify-between gap-3 border-t border-line py-3 first:border-t-0">
                 <span className="text-sm font-bold text-ink">{dayRule.name}</span>
-                <span className="text-right text-sm text-muted">{describeDayRule(dayRule)}</span>
+                <span className="text-right text-sm text-muted">
+                  {describeDayRule(dayRule, effectiveRequiredKeys(d, restDays))}
+                </span>
               </div>
             );
           })}

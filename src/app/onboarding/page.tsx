@@ -17,5 +17,7 @@ export default async function OnboardingPage() {
   if (!user) redirect("/login");
   if (user.onboarded) redirect("/dashboard");
 
-  return <PlanForm name={user.name} mode="onboarding" initialPlanMode="standard" initialGoals={[]} />;
+  return (
+    <PlanForm name={user.name} mode="onboarding" initialPlanMode="standard" initialGoals={[]} initialRestDays={{}} />
+  );
 }
