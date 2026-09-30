@@ -89,6 +89,28 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="flex flex-col gap-4">
+        <p className="max-w-md text-[15px] leading-relaxed text-muted">
+          Going solo works, but it&apos;s easier with backup.
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+            <p className="text-sm font-bold text-ink">Circles</p>
+            <p className="mt-1 text-sm text-muted">
+              Share your streak with a small group. See everyone&apos;s progress side by side, and nudge someone
+              who&apos;s about to lose their streak before the day&apos;s out.
+            </p>
+          </div>
+          <div className="rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+            <p className="text-sm font-bold text-ink">Reminders</p>
+            <p className="mt-1 text-sm text-muted">
+              Turn on push notifications and get a nudge if you haven&apos;t logged today yet — before it&apos;s too
+              late to keep the streak going.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <footer className="flex items-center justify-between border-t border-line pt-6 text-sm text-muted">
         <p>Built and maintained by ayush.</p>
         <Link href="/login" className="underline underline-offset-2">
