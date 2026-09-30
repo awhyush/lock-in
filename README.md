@@ -47,7 +47,7 @@ Any circle member can send another member a "you're about to lose your streak" n
 - **Under 2 hours left in the day.** `isNudgeWindowOpen` (`src/lib/nudges.ts`) compares the current time against the next local midnight — same clock every other date computation in this app uses. It's a pure function, unit-testable without touching the system clock.
 - **The recipient hasn't finished today.** Reuses `getCircleForMember`'s already-computed, visibility-filtered `doneToday` for that member in that circle, rather than re-deriving streak logic in the route.
 
-One nudge per (circle, sender, recipient) per day — enforced both by an app-level check and, as a backstop, a DB unique constraint on `Nudge`. There's no push/email notification system in this app, so delivery is in-app only: the recipient's next dashboard load fetches their unseen nudges, shows a dismissible banner naming who nudged them and in which circle, and marks them seen in that same request — so it surfaces once, not on every subsequent visit.
+One nudge per (circle, sender, recipient) per day — enforced both by an app-level check and, as a backstop, a DB unique constraint on `Nudge`. Delivery is in-app only: the recipient's next dashboard load fetches their unseen nudges, shows a dismissible banner naming who nudged them and in which circle, and marks them seen in that same request — so it surfaces once, not on every subsequent visit. (For an actual push notification rather than an in-app banner, see "Push notifications" below — a separate, daily, self-directed reminder rather than one member pinging another.)
 
 ## Google sign-in
 
@@ -56,6 +56,16 @@ Optional — the "Continue with Google" button on `/login` and `/signup` only re
 No database adapter is used here (this app always re-fetches session/plan data fresh from Prisma server-side, never trusts the JWT for anything but the user id) — so instead of Auth.js's own Account-linking tables, a Google sign-in is linked to a `User` row by hand in the `jwt` callback: look up by email, reuse the row if it exists, create one (with `passwordHash: null`, `onboarded: false`) if it doesn't. Matching by email is safe because Google has already verified that email belongs to whoever is signing in — so an existing password-based account with the same email is reused, not duplicated, and a brand-new Google user lands in `/onboarding` exactly like a fresh signup would.
 
 `User.passwordHash` is nullable to support this. The Credentials provider's `authorize()` rejects sign-in attempts for a null-password account rather than crashing on it, and `/profile`'s password form switches from "Change password" (requires the current one) to "Set a password" (doesn't — there's nothing to verify yet) based on whether the signed-in user actually has one.
+
+## Push notifications
+
+Optional — a "Enable reminders" row in `/profile` (`src/components/NotificationToggle.tsx`) only renders when `NEXT_PUBLIC_VAPID_PUBLIC_KEY` is set, and the browser supports the Push API. Subscribing calls `PushManager.subscribe` and posts the resulting endpoint/keys to `POST /api/push/subscribe`, which upserts a `PushSubscription` row (one per device/browser — `endpoint` is the natural unique key, so re-enabling on the same device updates rather than duplicates).
+
+Once a day, a Vercel Cron Job (`vercel.json`, `GET /api/cron/streak-reminders`) checks every subscribed user against today's actual completion state — `dayComplete`/`parseRestDays` from `src/lib/habits.ts` for preset plans, `goalDayComplete` from `src/lib/goals.ts` for custom goal plans, the exact same functions the dashboard and streak math use — and sends a reminder via [web-push](https://www.npmjs.com/package/web-push) (`src/lib/push.ts`) to anyone who genuinely hasn't finished, skipping anyone for whom nothing was required today (a rest day via `restDays`, or a Sunday-style recovery day) rather than nagging them. A subscription the push service reports as dead (404/410) is deleted on the spot — no separate cleanup job.
+
+The cron route isn't session-authenticated like everything else — it checks `Authorization: Bearer $CRON_SECRET` instead (Vercel sends this automatically for a scheduled invocation when an env var of that exact name is configured), and 401s unconditionally if `CRON_SECRET` isn't set.
+
+Scheduled for `0 17 * * *` (the 17:00 UTC hour) specifically to land before midnight IST: [Vercel Cron on the Hobby plan only guarantees per-*hour* precision](https://vercel.com/docs/cron-jobs/usage-and-pricing) (a job can fire anywhere in its scheduled hour), so the 18:00 UTC hour — which could slip as late as 18:59 UTC = 00:29 AM IST — isn't safe. The 17:00 UTC hour always lands between 22:30 PM–23:59 PM IST regardless of where in the hour Vercel actually runs it.
 
 ## Password reset & change
 
@@ -73,7 +83,9 @@ Email delivery goes through [Resend](https://resend.com) (`src/lib/email.ts`) if
    - `NEXT_PUBLIC_SITE_URL` — your Vercel deployment URL (e.g. `https://lock-in.vercel.app`); you can add this after the first deploy once you know the URL, then redeploy. It's also what the reset-password link points at, so forgot-password won't produce a usable link until this is set.
    - `RESEND_API_KEY` / `RESEND_FROM_EMAIL` — optional, but without them forgot-password can't actually deliver an email in production (it'll only log the link server-side, which nobody but you can see). Get a key at [resend.com](https://resend.com).
    - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` — optional, adds the "Continue with Google" button. Create an OAuth client at [console.cloud.google.com](https://console.cloud.google.com) (APIs & Services → Credentials → Create Credentials → OAuth client ID → Web application) with an authorized redirect URI of `https://<your-vercel-domain>/api/auth/callback/google`. Since `/login` and `/signup` are statically prerendered, adding or changing these after the first deploy needs a redeploy to take effect — same as any Vercel env var change.
-4. Deploy. `npm run build` runs `prisma migrate deploy` before building (see `package.json`) — Vercel never actually invokes `npm start` for serverless deploys, so migrations have to happen at build time instead. The schema is created/updated automatically on every deploy; no manual migration step needed.
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` — optional, enables push notification reminders (see "Push notifications" above). Generate a keypair with `npx web-push generate-vapid-keys`.
+   - `CRON_SECRET` — required for the push-reminder cron to actually do anything once the above are set; any random string (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`). Vercel wires it to the cron job's `Authorization` header automatically once the env var exists — no extra setup.
+4. Deploy. `npm run build` runs `prisma migrate deploy` before building (see `package.json`) — Vercel never actually invokes `npm start` for serverless deploys, so migrations have to happen at build time instead. The schema is created/updated automatically on every deploy; no manual migration step needed. `vercel.json`'s single daily cron job is picked up automatically too — no separate Vercel configuration, and it fits the Hobby plan's "once per day" cron limit as-is.
 
 ## Structure
 
@@ -88,7 +100,10 @@ Email delivery goes through [Resend](https://resend.com) (`src/lib/email.ts`) if
 - `src/components/AppNav.tsx` — the fixed floating bottom nav (Home/Circles/Plan/Profile, four labeled tabs) shown on every authenticated page. Theme toggle and sign-out live on the Profile page instead.
 - `src/app/globals.css` — the design tokens (Charcoal/Red/Sage palette, Nunito, card/nested radii, soft shadow) that drive the whole UI.
 - `src/lib/nudges.ts` — the pure time-gate (`isNudgeWindowOpen`) behind the circle nudge feature.
-- `prisma/schema.prisma` — `User`, `CheckIn` (preset habits), `Goal`/`GoalEntry` (custom goals), `Circle`/`CircleMember`, `Nudge`, `RateLimitHit`, `PasswordResetToken`.
+- `src/lib/push.ts` — wraps `web-push`/VAPID to send a reminder to every subscription a user holds, pruning ones the push service reports dead.
+- `src/app/api/cron/streak-reminders/route.ts` — the daily Vercel Cron target; `CRON_SECRET`-authenticated, not session-authenticated.
+- `src/components/NotificationToggle.tsx` — the Profile page's subscribe/unsubscribe control; `public/sw.js` handles the actual `push`/`notificationclick` events.
+- `prisma/schema.prisma` — `User`, `CheckIn` (preset habits), `Goal`/`GoalEntry` (custom goals), `Circle`/`CircleMember`, `Nudge`, `RateLimitHit`, `PasswordResetToken`, `PushSubscription`.
 
 ## Origin
 

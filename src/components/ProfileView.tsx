@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import { Avatar } from "@/components/Avatar";
 import { AppNav } from "@/components/AppNav";
+import { NotificationToggle } from "@/components/NotificationToggle";
 
 const inputClass =
   "w-full rounded-full border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
@@ -124,6 +125,7 @@ export function ProfileView({ name, email, hasPassword }: { name: string; email:
           <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Preferences</p>
           <div className="flex flex-col gap-2">
             <ThemeRow />
+            <NotificationToggle />
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}

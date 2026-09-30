@@ -28,6 +28,23 @@ model User {
   passwordResetTokens  PasswordResetToken[]
   nudgesSent           Nudge[]               @relation("NudgesSent")
   nudgesReceived       Nudge[]               @relation("NudgesReceived")
+  pushSubscriptions    PushSubscription[]
+}
+
+/** A browser/device's Web Push subscription. One user can hold several (one per
+ * device/browser); `endpoint` unique lets re-enabling on the same device upsert instead of
+ * duplicating. Deleted the moment the push service reports it dead (404/410) — see
+ * sendStreakReminder in src/lib/push.ts — so no separate cleanup job is needed. */
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 /** A single-use, short-lived token for the forgot-password flow. Only a hash of the token
