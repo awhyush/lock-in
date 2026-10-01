@@ -69,6 +69,7 @@ export function Tracker({
   const [rangeDays, setRangeDays] = useState<number>(HISTORY_RANGE_OPTIONS[0]);
   const [loadedDays, setLoadedDays] = useState(initialLoadedDays);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [weeklyPlanOpen, setWeeklyPlanOpen] = useState(false);
   const stripScrollRef = useRef<HTMLDivElement>(null);
   const firstName = name.split(" ")[0];
 
@@ -299,18 +300,27 @@ export function Tracker({
         </section>
 
         <section className="rounded-card bg-surface p-5 shadow-clay">
-          <p className="mb-1 font-bold text-[10px] uppercase tracking-[0.16em] text-muted">Weekly plan</p>
-          {[0, 1, 2, 3, 4, 5, 6].map((d) => {
-            const dayRule = DAY_RULES[d];
-            return (
-              <div key={d} className="flex items-center justify-between gap-3 border-t border-line py-3 first:border-t-0">
-                <span className="text-sm font-bold text-ink">{dayRule.name}</span>
-                <span className="text-right text-sm text-muted">
-                  {describeDayRule(dayRule, effectiveRequiredKeys(d, restDays))}
-                </span>
-              </div>
-            );
-          })}
+          <button
+            type="button"
+            onClick={() => setWeeklyPlanOpen((open) => !open)}
+            aria-expanded={weeklyPlanOpen}
+            className="flex w-full items-center justify-between gap-3"
+          >
+            <span className="font-bold text-[10px] uppercase tracking-[0.16em] text-muted">Weekly plan</span>
+            <ChevronIcon className={`h-4 w-4 text-muted transition-transform ${weeklyPlanOpen ? "rotate-180" : ""}`} />
+          </button>
+          {weeklyPlanOpen &&
+            [0, 1, 2, 3, 4, 5, 6].map((d) => {
+              const dayRule = DAY_RULES[d];
+              return (
+                <div key={d} className="flex items-center justify-between gap-3 border-t border-line py-3 first:mt-3 first:border-t-0">
+                  <span className="text-sm font-bold text-ink">{dayRule.name}</span>
+                  <span className="text-right text-sm text-muted">
+                    {describeDayRule(dayRule, effectiveRequiredKeys(d, restDays))}
+                  </span>
+                </div>
+              );
+            })}
         </section>
 
         <p className="text-center text-xs text-muted">If you only hit the minimum today, the day still counts.</p>
@@ -475,6 +485,14 @@ function CheckIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
       <path d="M4 12l5 5L20 6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

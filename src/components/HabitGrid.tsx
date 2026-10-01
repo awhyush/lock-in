@@ -28,12 +28,12 @@ export function HabitGrid({
   const rowLabelClass = compact ? "text-[10px]" : "text-xs";
 
   return (
-    <div ref={scrollRef} className="overflow-x-auto">
+    <div ref={scrollRef} className="overflow-x-auto rounded-card bg-surface-2 p-3 shadow-clay-inset">
       <div
         className={`grid w-max gap-x-1 ${gapYClass}`}
         style={{ gridTemplateColumns: `92px repeat(${days.length}, ${cellPx}px)` }}
       >
-        <div className="sticky left-0 z-10 bg-surface" />
+        <div className="sticky left-0 z-10 bg-surface-2" />
         {days.map((d) => (
           <div key={d.key} className={`text-center font-mono ${dayLabelClass} text-muted`}>
             {d.label}
@@ -69,7 +69,7 @@ function RowCells({
 }) {
   return (
     <>
-      <div className={`sticky left-0 z-10 self-center truncate bg-surface pr-2 ${rowLabelClass} text-muted`}>
+      <div className={`sticky left-0 z-10 self-center truncate bg-surface-2 pr-2 ${rowLabelClass} text-muted`}>
         {row.label}
       </div>
       {days.map((d) => {
@@ -78,8 +78,8 @@ function RowCells({
         return (
           <div
             key={d.key}
-            className={`${cellClass} ${done ? "bg-good" : "bg-surface-2"} ${
-              isToday ? "ring-2 ring-inset ring-accent" : ""
+            className={`${cellClass} ${done ? "bg-sage" : ""} ${
+              isToday ? "ring-2 ring-inset ring-sage-ink/60" : ""
             }`}
           />
         );
