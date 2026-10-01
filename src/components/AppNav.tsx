@@ -41,14 +41,6 @@ function ProfileIcon({ className }: { className?: string }) {
   );
 }
 
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 const TABS = [
   { href: "/dashboard", label: "Home", Icon: HomeIcon, active: (p: string) => p === "/dashboard" },
   { href: "/circles", label: "Circles", Icon: CirclesIcon, active: (p: string) => p.startsWith("/circles") },
@@ -57,41 +49,31 @@ const TABS = [
 ];
 
 /** Floating bottom nav shown on every authenticated page: four labeled tabs
- * (Home / Circles / Plan / Profile), plus a raised quick-add FAB to today's checklist.
- * Account actions (theme, sign out) live on the Profile page instead of being crammed in
- * here as unlabeled icons. */
+ * (Home / Circles / Plan / Profile). Account actions (theme, sign out) live on the Profile
+ * page instead of being crammed in here as unlabeled icons. */
 export function AppNav() {
   const pathname = usePathname();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
-      <div className="relative w-full max-w-sm">
-        <Link
-          href="/dashboard"
-          aria-label="Quick add"
-          className="absolute left-1/2 top-0 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-peach text-peach-ink shadow-clay-peach"
-        >
-          <PlusIcon className="h-6 w-6" />
-        </Link>
-        <div className="flex items-stretch gap-1 rounded-pill bg-surface p-2 shadow-clay">
-          {TABS.map(({ href, label, Icon, active }) => {
-            const isActive = active(pathname);
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-label={label}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex flex-1 flex-col items-center gap-1 rounded-tile py-2 transition-colors ${
-                  isActive ? "bg-sage text-sage-ink shadow-clay-sage" : "text-muted hover:text-ink"
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-[10px] font-bold">{label}</span>
-              </Link>
-            );
-          })}
-        </div>
+      <div className="flex w-full max-w-sm items-stretch gap-1 rounded-pill bg-surface p-2 shadow-clay">
+        {TABS.map(({ href, label, Icon, active }) => {
+          const isActive = active(pathname);
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-label={label}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex flex-1 flex-col items-center gap-1 rounded-tile py-2 transition-colors ${
+                isActive ? "bg-sage text-sage-ink shadow-clay-sage" : "text-muted hover:text-ink"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-[10px] font-bold">{label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
