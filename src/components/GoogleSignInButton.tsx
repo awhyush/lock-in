@@ -30,7 +30,7 @@ export function GoogleSignInButton({ callbackUrl }: { callbackUrl: string }) {
     <button
       type="button"
       onClick={() => signIn("google", { callbackUrl })}
-      className="flex w-full items-center justify-center gap-2.5 rounded-full border border-line bg-surface-2 px-4 py-3 text-sm font-bold text-ink"
+      className="flex w-full items-center justify-center gap-3 border-[0.5px] border-white/15 py-3.5 font-[family-name:var(--font-jetbrains-mono)] text-[11px] font-medium uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:border-[#6366f1] hover:text-[#6366f1]"
     >
       <GoogleIcon className="h-4 w-4" />
       Continue with Google

@@ -4,11 +4,8 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { AuthCard } from "@/components/AuthCard";
+import { AuthCard, authButtonClass, authInputClass, authLabelClass, authLinkClass } from "@/components/AuthCard";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
-
-const inputClass =
-  "w-full rounded-full border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
 
 export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
@@ -51,15 +48,15 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
       {googleEnabled && (
         <>
           <GoogleSignInButton callbackUrl="/onboarding" />
-          <div className="my-4 flex items-center gap-3 text-xs font-medium text-muted">
-            <span className="h-px flex-1 bg-line" />
-            or
-            <span className="h-px flex-1 bg-line" />
+          <div className="my-6 flex items-center gap-3 font-[family-name:var(--font-jetbrains-mono)] text-[10px] uppercase tracking-[0.3em] text-white/30">
+            <span className="h-[0.5px] flex-1 bg-white/15" />
+            Or
+            <span className="h-[0.5px] flex-1 bg-white/15" />
           </div>
         </>
       )}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5 text-sm font-medium">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <label className={authLabelClass}>
           Name
           <input
             type="text"
@@ -67,10 +64,10 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={inputClass}
+            className={authInputClass}
           />
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium">
+        <label className={authLabelClass}>
           Email
           <input
             type="email"
@@ -78,10 +75,10 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={inputClass}
+            className={authInputClass}
           />
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium">
+        <label className={authLabelClass}>
           Password
           <input
             type="password"
@@ -90,24 +87,21 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={inputClass}
+            className={authInputClass}
           />
-          <span className="text-xs text-muted">At least 8 characters.</span>
+          <span className="normal-case tracking-normal text-white/30">At least 8 characters.</span>
         </label>
-        {error && <p className="text-sm text-warn">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-1 rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-ink disabled:opacity-60"
-        >
+        {error && (
+          <p className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] uppercase tracking-[0.2em] text-white/70">
+            Error_ {error}
+          </p>
+        )}
+        <button type="submit" disabled={loading} className={authButtonClass}>
           {loading ? "Creating account..." : "Create account"}
         </button>
       </form>
-      <p className="mt-5 text-center text-sm text-muted">
-        Already have an account?{" "}
-        <Link href="/login" className="font-medium text-ink underline underline-offset-2">
-          Sign in
-        </Link>
+      <p className="mt-6 text-center font-[family-name:var(--font-inter)] text-sm font-light text-white/50">
+        Already have an account? <Link href="/login" className={authLinkClass}>Sign in</Link>
       </p>
     </AuthCard>
   );

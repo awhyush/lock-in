@@ -2,10 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { AuthCard } from "@/components/AuthCard";
-
-const inputClass =
-  "w-full rounded-full border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
+import { AuthCard, authButtonClass, authInputClass, authLabelClass, authLinkClass } from "@/components/AuthCard";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -28,13 +25,13 @@ export function ForgotPasswordForm() {
   return (
     <AuthCard eyebrow="Reset access" title="Forgot password">
       {sent ? (
-        <p className="text-sm text-ink">
-          If an account exists for <b>{email}</b>, we&apos;ve sent a link to reset your password. It expires in 30
-          minutes.
+        <p className="font-[family-name:var(--font-inter)] text-sm font-light text-white/70">
+          If an account exists for <b className="font-medium text-white">{email}</b>, we&apos;ve sent a link to reset
+          your password. It expires in 30 minutes.
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-sm font-medium">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <label className={authLabelClass}>
             Email
             <input
               type="email"
@@ -42,20 +39,16 @@ export function ForgotPasswordForm() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={inputClass}
+              className={authInputClass}
             />
           </label>
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-1 rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-ink disabled:opacity-60"
-          >
+          <button type="submit" disabled={loading} className={authButtonClass}>
             {loading ? "Sending..." : "Send reset link"}
           </button>
         </form>
       )}
-      <p className="mt-5 text-center text-sm text-muted">
-        <Link href="/login" className="font-medium text-ink underline underline-offset-2">
+      <p className="mt-6 text-center font-[family-name:var(--font-inter)] text-sm font-light text-white/50">
+        <Link href="/login" className={authLinkClass}>
           Back to sign in
         </Link>
       </p>

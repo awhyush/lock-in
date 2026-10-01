@@ -1,152 +1,148 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { HABIT_KEYS, HABIT_LABELS, PLAN_MODES, PLAN_INFO } from "@/lib/habits";
 import { SITE_DESCRIPTION } from "@/lib/site";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { BRUTALIST_FONT_VARS } from "@/lib/brutalist-fonts";
+import { NoiseOverlay } from "@/components/NoiseOverlay";
 
 export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
 };
 
+const MONO = "font-[family-name:var(--font-jetbrains-mono)]";
+const DISPLAY = "font-[family-name:var(--font-inter-tight)]";
+const BODY = "font-[family-name:var(--font-inter)]";
+
+const HERO_WORDS = ["LOCK", "IN", "EVERY", "DAY"];
+
+const SYSTEM_CARDS = [
+  {
+    tag: "SYSTEM_01",
+    title: "Streaks",
+    body: "Pick a plan, check off today's habits, and watch a real streak build across 14/30/90 days.",
+  },
+  {
+    tag: "SYSTEM_02",
+    title: "Circles",
+    body: "Share progress with a small group. See every member's grid side by side, nudge who's about to slip.",
+  },
+  {
+    tag: "SYSTEM_03",
+    title: "Reminders",
+    body: "Opt into push notifications. One reminder, before the day's out, if today isn't done yet.",
+  },
+];
+
 export default async function Home() {
   const session = await auth();
   if (session?.user) redirect("/dashboard");
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-16 px-4 py-10">
-      <nav className="flex items-center justify-between">
-        <span className="font-black text-lg tracking-tight text-ink sm:text-xl">THE LOCK-IN</span>
-        <div className="flex items-center gap-2 text-sm sm:gap-4">
-          <Link href="/login" className="whitespace-nowrap text-muted underline underline-offset-2">
+    <div className={`${BRUTALIST_FONT_VARS} relative min-h-screen bg-black text-white`}>
+      <NoiseOverlay />
+
+      <nav className="sticky top-0 z-40 flex h-[72px] items-center justify-between border-b-[0.5px] border-white/15 bg-black/80 px-5 backdrop-blur sm:px-8">
+        <div className="flex items-center gap-2.5">
+          <span className={`${DISPLAY} text-sm font-black uppercase tracking-[-0.03em] sm:text-base`}>
+            The Lock-In
+          </span>
+          <span className="h-1.5 w-1.5 flex-none rounded-full bg-white" />
+          <span className={`${MONO} hidden text-[10px] uppercase tracking-[0.3em] text-white/40 sm:inline`}>
+            V.01
+          </span>
+        </div>
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Link
+            href="/login"
+            className={`${MONO} whitespace-nowrap text-[10px] uppercase tracking-[0.25em] text-white/70 transition-colors duration-300 hover:text-white`}
+          >
             Sign in
           </Link>
           <Link
             href="/signup"
-            className="whitespace-nowrap rounded-full bg-accent px-3 py-1.5 font-bold text-accent-ink sm:px-4 sm:py-2"
+            className={`${MONO} whitespace-nowrap rounded-full bg-white px-4 py-2 text-[10px] font-medium uppercase tracking-[0.3em] text-black transition-colors duration-300 hover:bg-[#6366f1] hover:text-white`}
           >
-            <span className="sm:hidden">Sign up</span>
-            <span className="hidden sm:inline">Create account</span>
+            Get access
           </Link>
-          <ThemeToggle />
         </div>
       </nav>
 
-      <section className="relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] border border-line bg-surface p-8 shadow-soft">
-        <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-sage/20" />
+      <section className="grid grid-cols-1 border-b-[0.5px] border-white/15 sm:grid-cols-2">
+        {HERO_WORDS.map((word, i) => (
+          <div
+            key={word}
+            className={`flex h-[34vh] items-end overflow-hidden border-white/15 px-4 pb-2 sm:h-[40vh] sm:px-8 sm:pb-4 ${
+              i < 3 ? "border-b-[0.5px]" : ""
+            } ${i < 2 ? "sm:border-b-[0.5px]" : "sm:border-b-0"} ${i % 2 === 0 ? "sm:border-r-[0.5px]" : ""}`}
+          >
+            <span
+              className={`${DISPLAY} whitespace-nowrap font-black uppercase leading-[0.8] tracking-[-0.05em] text-[clamp(3rem,15vw,11rem)]`}
+            >
+              {word}
+            </span>
+          </div>
+        ))}
+      </section>
 
-        <p className="relative font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Daily reset tracker</p>
-        <h1 className="relative max-w-xl font-black text-5xl leading-[1.02] tracking-tight text-ink text-balance">
-          Lock in on the things that matter to you.
-        </h1>
-        <p className="relative max-w-md text-[15px] leading-relaxed text-muted">
-          Pick a plan, check off five habits a day, and build a real streak instead of relying on good intentions.
-        </p>
-        <div className="relative flex items-center gap-3">
-          <Link href="/signup" className="rounded-full bg-accent px-5 py-3 text-sm font-bold text-accent-ink">
+      <section className="grid grid-cols-1 border-b-[0.5px] border-white/15 sm:grid-cols-4">
+        <div className="flex flex-col justify-center gap-1 border-white/15 px-5 py-6 sm:border-r-[0.5px] sm:px-6">
+          <p className={`${MONO} text-[9px] uppercase tracking-[0.3em] text-white/40`}>A_daily_reset_tracker</p>
+          <p className={`${BODY} text-sm font-light text-white/70`}>
+            Daily habits. Real streaks. No excuses, just a real count.
+          </p>
+        </div>
+        <div className="border-t-[0.5px] border-white/15 sm:border-t-0 sm:border-r-[0.5px]">
+          <Link
+            href="/signup"
+            className={`${MONO} flex h-full min-h-24 w-full items-center justify-center bg-white text-center text-[11px] font-medium uppercase tracking-[0.3em] text-black transition-colors duration-300 hover:bg-[#6366f1] hover:text-white sm:min-h-0`}
+          >
             Create account
           </Link>
-          <Link href="/login" className="rounded-full border border-line px-5 py-3 text-sm font-bold text-ink">
-            Sign in
-          </Link>
         </div>
-      </section>
-
-      <section className="flex flex-col gap-6 sm:flex-row sm:items-start">
-        <div className="flex flex-1 flex-col gap-4">
-          <ol className="flex flex-col gap-3">
-            {[
-              { title: "Pick your plan", body: "Choose a recommended preset, or set your own minutes for each habit." },
-              { title: "Check off today", body: "Five habits, weekday-aware. Hit the minimum and the day still counts." },
-              { title: "Watch the streak", body: "See your progress across 14/30/90 days and keep your streak alive." },
-            ].map((step, i) => (
-              <li key={step.title} className="flex gap-4 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
-                <span className="text-lg font-black tabular-nums text-accent">{i + 1}</span>
-                <span>
-                  <span className="block text-sm font-bold text-ink">{step.title}</span>
-                  <span className="block text-sm text-muted">{step.body}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-          <div className="flex flex-wrap gap-2">
-            {HABIT_KEYS.map((key) => (
-              <span
-                key={key}
-                className="rounded-full border border-line px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted"
-              >
-                {HABIT_LABELS[key]}
-              </span>
-            ))}
-          </div>
+        <div className="flex flex-col items-center justify-center border-t-[0.5px] border-white/15 px-5 py-6 text-center sm:border-t-0 sm:border-r-[0.5px] sm:px-6">
+          <span className={`${MONO} text-[13px] leading-[1.5] tracking-[0.15em] text-white sm:text-[14px]`}>
+            ONE<span className="text-white/20">_</span>DAY<span className="text-white/20">_</span>OR
+            <br />
+            DAY<span className="text-white/20">_</span>1
+          </span>
         </div>
-        <Image
-          src="/landing/streak.png"
-          alt="Today's habits with a 6-day streak and this week's completion percentage"
-          width={373}
-          height={575}
-          className="mx-auto w-full max-w-[220px] flex-none rounded-[1.5rem] border border-line shadow-soft sm:mx-0 sm:w-[220px]"
-        />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {PLAN_MODES.map((mode) => (
-            <div key={mode} className="rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
-              <p className="text-sm font-bold text-ink">{PLAN_INFO[mode].title}</p>
-              <p className="mt-1 text-sm text-muted">{PLAN_INFO[mode].description}</p>
-            </div>
+        <div className="flex flex-col justify-center gap-1.5 border-t-[0.5px] border-white/15 px-5 py-6 sm:border-t-0 sm:px-6">
+          {["Free_to_start", "Daily_streaks"].map((label) => (
+            <span key={label} className={`${MONO} text-[9px] uppercase tracking-[0.25em] text-white/50`}>
+              {label}
+            </span>
           ))}
         </div>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <p className="max-w-md text-[15px] leading-relaxed text-muted">
-          Going solo works, but it&apos;s easier with backup.
-        </p>
-        <div className="flex flex-col gap-4 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft sm:flex-row sm:items-center">
-          <Image
-            src="/landing/circles.png"
-            alt="A circle's leaderboard showing each member's streak and daily habit grid"
-            width={373}
-            height={543}
-            className="mx-auto w-full max-w-[200px] flex-none rounded-[1.25rem] border border-line sm:mx-0"
-          />
-          <div>
-            <p className="text-sm font-bold text-ink">Circles</p>
-            <p className="mt-1 text-sm text-muted">
-              Share your streak with a small group. See everyone&apos;s progress side by side, and nudge someone
-              who&apos;s about to lose their streak before the day&apos;s out.
-            </p>
+      <section className="grid grid-cols-1 border-b-[0.5px] border-white/15 sm:grid-cols-3">
+        {SYSTEM_CARDS.map((card, i) => (
+          <div
+            key={card.tag}
+            className={`group flex h-[280px] flex-col justify-between border-white/15 p-6 transition-colors duration-300 hover:bg-white/[0.03] ${
+              i < 2 ? "border-b-[0.5px] sm:border-b-0" : ""
+            } ${i < SYSTEM_CARDS.length - 1 ? "sm:border-r-[0.5px]" : ""}`}
+          >
+            <p className={`${MONO} text-[9px] uppercase tracking-[0.3em] text-white/40`}>{card.tag}</p>
+            <div>
+              <h3 className={`${DISPLAY} text-2xl font-black uppercase tracking-[-0.03em]`}>{card.title}</h3>
+              <p className={`${BODY} mt-2 text-sm font-light text-white/40`}>{card.body}</p>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col gap-4 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft sm:flex-row sm:items-center">
-          <Image
-            src="/landing/notifications.png"
-            alt="A 'Reminders on' toggle in profile preferences"
-            width={373}
-            height={224}
-            className="mx-auto w-full max-w-[200px] flex-none rounded-[1.25rem] border border-line sm:mx-0"
-          />
-          <div>
-            <p className="text-sm font-bold text-ink">Reminders</p>
-            <p className="mt-1 text-sm text-muted">
-              Turn on push notifications and get a nudge if you haven&apos;t logged today yet — before it&apos;s too
-              late to keep the streak going.
-            </p>
-          </div>
-        </div>
+        ))}
       </section>
 
-      <footer className="flex items-center justify-between border-t border-line pt-6 text-sm text-muted">
-        <p>Built and maintained by ayush.</p>
-        <Link href="/login" className="underline underline-offset-2">
+      <footer className="flex items-center justify-between px-5 py-8 sm:px-8">
+        <p className={`${MONO} text-[9px] uppercase tracking-[0.25em] text-white/30`}>Built_by_ayush</p>
+        <Link
+          href="/login"
+          className={`${MONO} text-[9px] uppercase tracking-[0.25em] text-white/50 underline underline-offset-4 transition-colors duration-300 hover:text-white`}
+        >
           Sign in
         </Link>
       </footer>
-    </main>
+    </div>
   );
 }
