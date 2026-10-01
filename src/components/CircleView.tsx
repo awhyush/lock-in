@@ -59,35 +59,35 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
       <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8 pb-32">
         <header className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Circle</p>
+            <p className="font-semibold text-[10px] uppercase tracking-[0.16em] text-muted">Circle</p>
             <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">{circle.name}</h1>
           </div>
           <button
             type="button"
             onClick={leave}
             disabled={leaving}
-            className="flex-none rounded-full border border-line px-3.5 py-1.5 text-xs font-bold text-muted disabled:opacity-60"
+            className="flex-none rounded-pill bg-surface px-3.5 py-1.5 text-xs font-bold text-muted shadow-clay disabled:opacity-60"
           >
             Leave
           </button>
         </header>
 
-        <section className="flex items-center justify-between gap-3 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+        <section className="flex items-center justify-between gap-3 rounded-card bg-surface p-4 shadow-clay">
           <div>
-            <p className="font-bold text-[10px] uppercase tracking-[0.14em] text-sage">Invite code</p>
+            <p className="font-bold text-[10px] uppercase tracking-[0.14em] text-muted">Invite code</p>
             <p className="text-sm font-bold text-ink">{circle.inviteCode}</p>
           </div>
           <button
             type="button"
             onClick={copyCode}
-            className="flex-none rounded-full border border-line px-3.5 py-1.5 text-xs font-bold text-ink"
+            className="flex-none rounded-pill bg-surface-2 px-3.5 py-1.5 text-xs font-bold text-ink shadow-clay-inset"
           >
             {copied ? "Copied" : "Copy"}
           </button>
         </section>
 
         {notDoneToday.length > 0 && (
-          <div className="rounded-[1.5rem] bg-sage/20 px-4 py-3 text-sm text-ink">
+          <div className="rounded-card bg-butter px-4 py-3 text-sm text-butter-ink shadow-clay-butter">
             Still to go today:{" "}
             {notDoneToday.map((m) => (m.userId === viewerId ? "you" : m.name.split(" ")[0])).join(", ")}
           </div>
@@ -95,17 +95,17 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
 
         <VisibilityEditor circleId={circle.id} allKeys={circle.viewerAllKeys} visibleKeys={circle.viewerVisibleKeys} />
 
-        <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+        <section className="rounded-hero bg-surface p-5 shadow-clay">
           <div className="mb-4 flex items-center justify-between gap-3 px-0.5">
-            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Members</p>
+            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-muted">Members</p>
             <div className="flex items-center gap-1">
               {(["streak", "week"] as SortMode[]).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => setSortMode(m)}
-                  className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                    sortMode === m ? "border-accent text-accent" : "border-line text-muted"
+                  className={`rounded-pill px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                    sortMode === m ? "bg-sage text-sage-ink shadow-clay-sage" : "bg-surface-2 text-muted shadow-clay-inset"
                   }`}
                 >
                   {m === "streak" ? "Streak" : "This week"}
@@ -175,19 +175,19 @@ function MemberRow({
           {isSelf && <span className="ml-1.5 text-xs font-medium text-muted">(you)</span>}
         </span>
         <span className="flex items-center gap-2 text-xs font-bold text-muted">
-          <span className="text-accent">{member.streak}d streak</span>
+          <span className="text-sage-ink">{member.streak}d streak</span>
           {member.weekPercent != null && <span>{member.weekPercent}% this week</span>}
           {member.canNudge && !nudged && (
             <button
               type="button"
               onClick={nudge}
               disabled={nudging}
-              className="rounded-full border border-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-accent disabled:opacity-60"
+              className="rounded-pill bg-peach px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-peach-ink shadow-clay-peach disabled:opacity-60"
             >
               {nudging ? "..." : "Nudge"}
             </button>
           )}
-          {nudged && <span className="rounded-full border border-line px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide">Nudged</span>}
+          {nudged && <span className="rounded-pill bg-surface-2 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide shadow-clay-inset">Nudged</span>}
         </span>
       </div>
       {error && <p className="mb-2 text-xs text-warn">{error}</p>}
@@ -243,7 +243,7 @@ function VisibilityEditor({
   if (allKeys.length === 0) return null;
 
   return (
-    <section className="rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+    <section className="rounded-card bg-surface p-4 shadow-clay">
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
@@ -267,8 +267,8 @@ function VisibilityEditor({
                   key={k.key}
                   type="button"
                   onClick={() => toggleKey(k.key)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-bold ${
-                    active ? "border-accent bg-accent text-accent-ink" : "border-line text-muted"
+                  className={`rounded-pill px-3 py-1.5 text-xs font-bold ${
+                    active ? "bg-sage text-sage-ink shadow-clay-sage" : "bg-surface-2 text-muted shadow-clay-inset"
                   }`}
                 >
                   {k.label}
@@ -280,7 +280,7 @@ function VisibilityEditor({
             type="button"
             onClick={save}
             disabled={saving}
-            className="self-start rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-ink disabled:opacity-60"
+            className="self-start rounded-pill bg-sage px-4 py-2 text-xs font-bold text-sage-ink shadow-clay-sage disabled:opacity-60"
           >
             {saving ? "Saving..." : saved ? "Saved" : "Save"}
           </button>

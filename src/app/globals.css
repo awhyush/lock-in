@@ -1,22 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --ground: #eeebe3;
-  --surface: #ffffff;
-  --surface-2: #f6f4ee;
-  --ink: #171e19;
-  --muted: #6b756f;
-  --accent: #ca0013;
-  --accent-ink: #ffffff;
-  --sage: #b7c6c2;
-  --good: #2f9e5c;
-  --good-bg: #e3f3e8;
-  --warn: #b9862a;
-  --warn-bg: #f7ecd6;
-  --line: rgba(23, 30, 25, 0.16);
-  --shadow: rgba(23, 30, 25, 0.08);
-  --radius-card: 2.5rem;
-  --radius-nested: 1.5rem;
+  --ground: #eef0f5;
+  --surface: #f6f7fb;
+  --surface-2: #eef0f5;
+  --ink: #3a3f4a;
+  --muted: #8a90a0;
+  --accent: #bfe3c6;
+  --accent-ink: #3f6b48;
+  --sage: #bfe3c6;
+  --sage-ink: #3f6b48;
+  --peach: #ffd9c2;
+  --peach-ink: #a4593a;
+  --butter: #ffe9b0;
+  --butter-ink: #8a6d1f;
+  --sky: #c9e4f6;
+  --sky-ink: #3a6a8a;
+  --good: var(--sage-ink);
+  --good-bg: var(--sage);
+  --warn: var(--peach-ink);
+  --warn-bg: var(--peach);
+  --line: rgba(58, 63, 74, 0.12);
+  --shadow: rgba(163, 170, 190, 0.35);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,6 +34,13 @@
     --accent: #ca0013;
     --accent-ink: #ffffff;
     --sage: #4a5a53;
+    --sage-ink: #bcd6c9;
+    --peach: #6b4a3a;
+    --peach-ink: #f0c4a8;
+    --butter: #5a4f2a;
+    --butter-ink: #f0dd9e;
+    --sky: #2f4a5a;
+    --sky-ink: #aed4ec;
     --good: #4fb477;
     --good-bg: #1c3327;
     --warn: #e8b74d;
@@ -47,6 +59,13 @@
   --accent: #ca0013;
   --accent-ink: #ffffff;
   --sage: #4a5a53;
+  --sage-ink: #bcd6c9;
+  --peach: #6b4a3a;
+  --peach-ink: #f0c4a8;
+  --butter: #5a4f2a;
+  --butter-ink: #f0dd9e;
+  --sky: #2f4a5a;
+  --sky-ink: #aed4ec;
   --good: #4fb477;
   --good-bg: #1c3327;
   --warn: #e8b74d;
@@ -64,6 +83,13 @@
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-sage: var(--sage);
+  --color-sage-ink: var(--sage-ink);
+  --color-peach: var(--peach);
+  --color-peach-ink: var(--peach-ink);
+  --color-butter: var(--butter);
+  --color-butter-ink: var(--butter-ink);
+  --color-sky: var(--sky);
+  --color-sky-ink: var(--sky-ink);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-warn: var(--warn);
@@ -72,6 +98,10 @@
   --font-display: var(--font-nunito);
   --font-body: var(--font-nunito);
   --font-mono: var(--font-nunito);
+  --radius-hero: 34px;
+  --radius-card: 26px;
+  --radius-tile: 20px;
+  --radius-pill: 18px;
 }
 
 body {
@@ -81,5 +111,70 @@ body {
 }
 
 .shadow-soft {
+  box-shadow: 0 20px 50px -12px var(--shadow);
+}
+
+/* Claymorphism: a puffy raised surface reads as an outer soft drop (bottom-right) + an outer
+   white highlight (top-left) + a faint inset pair, all at once. Fixed light-mode rgba values
+   (not theme vars) since this recipe is light-only by design — dark mode reverts to the plain
+   .shadow-soft look below instead of attempting a dark clay hybrid. */
+.shadow-clay {
+  box-shadow:
+    10px 12px 24px rgba(163, 170, 190, 0.45),
+    -8px -8px 20px rgba(255, 255, 255, 0.9),
+    inset -3px -3px 8px rgba(163, 170, 190, 0.28),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.75);
+}
+.shadow-clay-sage {
+  box-shadow:
+    10px 12px 24px rgba(191, 227, 198, 0.55),
+    -8px -8px 20px rgba(255, 255, 255, 0.9),
+    inset -3px -3px 8px rgba(163, 170, 190, 0.2),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.75);
+}
+.shadow-clay-peach {
+  box-shadow:
+    10px 12px 24px rgba(255, 217, 194, 0.6),
+    -8px -8px 20px rgba(255, 255, 255, 0.9),
+    inset -3px -3px 8px rgba(164, 89, 58, 0.18),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.75);
+}
+.shadow-clay-butter {
+  box-shadow:
+    10px 12px 24px rgba(255, 233, 176, 0.6),
+    -8px -8px 20px rgba(255, 255, 255, 0.9),
+    inset -3px -3px 8px rgba(163, 170, 190, 0.2),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.75);
+}
+.shadow-clay-sky {
+  box-shadow:
+    10px 12px 24px rgba(201, 228, 246, 0.6),
+    -8px -8px 20px rgba(255, 255, 255, 0.9),
+    inset -3px -3px 8px rgba(163, 170, 190, 0.2),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.75);
+}
+/* Pure inset (sunken) clay — pressed states, the progress-bar track, the pending-toggle well. */
+.shadow-clay-inset {
+  box-shadow:
+    inset -3px -3px 8px rgba(163, 170, 190, 0.3),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shadow-clay,
+  :root:not([data-theme="light"]) .shadow-clay-sage,
+  :root:not([data-theme="light"]) .shadow-clay-peach,
+  :root:not([data-theme="light"]) .shadow-clay-butter,
+  :root:not([data-theme="light"]) .shadow-clay-sky,
+  :root:not([data-theme="light"]) .shadow-clay-inset {
+    box-shadow: 0 20px 50px -12px var(--shadow);
+  }
+}
+[data-theme="dark"] .shadow-clay,
+[data-theme="dark"] .shadow-clay-sage,
+[data-theme="dark"] .shadow-clay-peach,
+[data-theme="dark"] .shadow-clay-butter,
+[data-theme="dark"] .shadow-clay-sky,
+[data-theme="dark"] .shadow-clay-inset {
   box-shadow: 0 20px 50px -12px var(--shadow);
 }

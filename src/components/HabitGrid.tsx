@@ -22,7 +22,7 @@ export function HabitGrid({
   scrollRef?: RefObject<HTMLDivElement | null>;
 }) {
   const cellPx = compact ? 16 : 20;
-  const cellClass = compact ? "h-4 w-4 rounded-[3px]" : "h-5 w-5 rounded-[4px]";
+  const cellClass = compact ? "h-4 w-4 rounded-[5px]" : "h-5 w-5 rounded-[6px]";
   const gapYClass = compact ? "gap-y-1" : "gap-y-2";
   const dayLabelClass = compact ? "text-[8px]" : "text-[9px]";
   const rowLabelClass = compact ? "text-[10px]" : "text-xs";
