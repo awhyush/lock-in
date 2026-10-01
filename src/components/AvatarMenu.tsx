@@ -41,7 +41,7 @@ export function AvatarMenu({ name }: { name: string }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage"
       >
         <Avatar name={name} />
       </button>
@@ -49,7 +49,7 @@ export function AvatarMenu({ name }: { name: string }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-20 mt-2 w-44 overflow-hidden rounded-[1.25rem] border border-line bg-surface shadow-soft"
+          className="absolute right-0 top-full z-20 mt-2 w-44 overflow-hidden rounded-tile bg-surface shadow-clay"
         >
           <Link
             href="/profile"

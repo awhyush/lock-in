@@ -117,7 +117,7 @@ export function PlanForm({
         <div className="w-full max-w-lg">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">
+              <p className="font-semibold text-[10px] uppercase tracking-[0.16em] text-muted">
                 {mode === "onboarding" ? `Hey ${firstName}` : "Your plan"}
               </p>
               <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">
@@ -139,19 +139,19 @@ export function PlanForm({
                   <button
                     type="button"
                     onClick={() => setSelected(key)}
-                    className={`flex w-full flex-col gap-1 rounded-[1.5rem] border px-5 py-4 text-left transition-colors ${
-                      active ? "border-accent bg-good-bg/40" : "border-line bg-surface"
+                    className={`flex w-full flex-col gap-1 rounded-card p-4 text-left transition-colors ${
+                      active ? "bg-sage shadow-clay-sage" : "bg-surface shadow-clay"
                     }`}
                   >
-                    <span className="flex items-center gap-2 font-bold text-ink">
-                      <span className={`inline-block h-2.5 w-2.5 rounded-full ${active ? "bg-accent" : "bg-surface-2"}`} />
+                    <span className={`flex items-center gap-2 font-bold ${active ? "text-sage-ink" : "text-ink"}`}>
+                      <span className={`inline-block h-2.5 w-2.5 rounded-full ${active ? "bg-sage-ink" : "bg-surface-2"}`} />
                       {info.title}
                     </span>
-                    <span className="text-sm text-muted">{info.description}</span>
+                    <span className={`text-sm ${active ? "text-sage-ink/80" : "text-muted"}`}>{info.description}</span>
                   </button>
 
                   {key === "custom" && active && (
-                    <div className="mt-2 flex flex-col gap-3 rounded-[1.5rem] border border-line bg-surface-2 p-4">
+                    <div className="mt-2 flex flex-col gap-3 rounded-card bg-surface p-4 shadow-clay">
                       <div className="flex flex-col gap-2">
                         <input
                           type="text"
@@ -165,7 +165,7 @@ export function PlanForm({
                               addGoal();
                             }
                           }}
-                          className="w-full rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                          className="w-full rounded-full bg-surface-2 px-4 py-2 text-sm text-ink shadow-clay-inset outline-none focus-visible:ring-2 focus-visible:ring-sage"
                         />
 
                         <div className="flex items-center gap-1.5">
@@ -174,8 +174,8 @@ export function PlanForm({
                               key={opt.type}
                               type="button"
                               onClick={() => changeNewGoalType(opt.type)}
-                              className={`rounded-full border px-3 py-1.5 text-xs font-bold ${
-                                newGoalType === opt.type ? "border-accent bg-accent text-accent-ink" : "border-line text-muted"
+                              className={`rounded-pill px-3 py-1.5 text-xs font-bold ${
+                                newGoalType === opt.type ? "bg-sage text-sage-ink shadow-clay-sage" : "bg-surface-2 text-muted shadow-clay-inset"
                               }`}
                             >
                               {opt.label}
@@ -184,7 +184,7 @@ export function PlanForm({
                         </div>
 
                         {newGoalType !== "checkbox" && (
-                          <div className="flex items-center gap-3 rounded-full border border-line bg-surface px-4 py-2">
+                          <div className="flex items-center gap-3 rounded-full bg-surface-2 px-4 py-2 shadow-clay-inset">
                             <span className="text-xs font-medium text-muted">
                               {newGoalType === "counter" ? "Aim for" : "Minutes"}
                             </span>
@@ -195,7 +195,7 @@ export function PlanForm({
                               step={targetBounds.step}
                               value={newGoalTarget}
                               onChange={(e) => setNewGoalTarget(Number(e.target.value))}
-                              className="flex-1 accent-accent"
+                              className="flex-1 accent-sage-ink"
                             />
                             <span className="w-10 flex-none text-right text-sm font-bold tabular-nums text-ink">
                               {newGoalTarget}
@@ -207,7 +207,7 @@ export function PlanForm({
                           type="button"
                           onClick={addGoal}
                           disabled={!newGoalLabel.trim() || goals.length >= MAX_GOALS}
-                          className="rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-ink disabled:opacity-50"
+                          className="rounded-full bg-sage px-4 py-2 text-xs font-bold text-sage-ink shadow-clay-sage disabled:opacity-50"
                         >
                           Add goal
                         </button>
@@ -218,7 +218,7 @@ export function PlanForm({
                           {goals.map((g, i) => (
                             <li
                               key={g.id ?? `new-${i}`}
-                              className="flex items-center justify-between gap-2 rounded-[1rem] border border-line bg-surface px-4 py-2.5"
+                              className="flex items-center justify-between gap-2 rounded-tile bg-surface-2 px-4 py-2.5 shadow-clay-inset"
                             >
                               <span className="min-w-0">
                                 <span className="block truncate text-sm text-ink">{g.label}</span>
@@ -244,7 +244,7 @@ export function PlanForm({
                   )}
 
                   {key !== "custom" && active && (
-                    <div className="mt-2 flex flex-col gap-3 rounded-[1.5rem] border border-line bg-surface-2 p-4">
+                    <div className="mt-2 flex flex-col gap-3 rounded-card bg-surface p-4 shadow-clay">
                       <div>
                         <p className="text-sm font-bold text-ink">Rest days</p>
                         <p className="text-xs text-muted">
@@ -264,8 +264,8 @@ export function PlanForm({
                                     type="button"
                                     onClick={() => toggleRestDay(habitKey, day)}
                                     aria-pressed={!excused}
-                                    className={`rounded-full border px-2 py-1 text-[10px] font-bold uppercase ${
-                                      excused ? "border-line text-muted" : "border-accent bg-accent text-accent-ink"
+                                    className={`rounded-pill px-2 py-1 text-[10px] font-bold uppercase ${
+                                      excused ? "bg-surface-2 text-muted shadow-clay-inset" : "bg-sage text-sage-ink shadow-clay-sage"
                                     }`}
                                   >
                                     {WEEKDAY_SHORT[day]}
@@ -289,7 +289,7 @@ export function PlanForm({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="mt-6 w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-ink disabled:opacity-60"
+            className="mt-6 w-full rounded-full bg-sage px-4 py-3 text-sm font-bold text-sage-ink shadow-clay-sage disabled:opacity-60"
           >
             {loading ? "Saving..." : mode === "onboarding" ? "Start the reset" : "Save plan"}
           </button>

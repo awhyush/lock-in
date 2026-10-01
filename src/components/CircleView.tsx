@@ -95,7 +95,7 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
 
         <VisibilityEditor circleId={circle.id} allKeys={circle.viewerAllKeys} visibleKeys={circle.viewerVisibleKeys} />
 
-        <section className="rounded-hero bg-surface p-5 shadow-clay">
+        <section className="rounded-card bg-surface p-5 shadow-clay">
           <div className="mb-4 flex items-center justify-between gap-3 px-0.5">
             <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-muted">Members</p>
             <div className="flex items-center gap-1">

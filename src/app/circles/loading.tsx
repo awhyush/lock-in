@@ -8,12 +8,12 @@ export default function CirclesLoading() {
         <Skeleton className="h-10 w-40" />
       </header>
 
-      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+      <section className="rounded-card bg-surface p-5 shadow-clay">
         <Skeleton className="mb-3 h-3 w-20" />
         <Skeleton className="h-11 w-full rounded-full" />
       </section>
 
-      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+      <section className="rounded-card bg-surface p-5 shadow-clay">
         <Skeleton className="mb-3 h-3 w-24" />
         <Skeleton className="h-11 w-full rounded-full" />
       </section>

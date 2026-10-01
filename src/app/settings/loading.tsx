@@ -9,7 +9,7 @@ export default function SettingsLoading() {
         <Skeleton className="mt-3 h-4 w-3/4" />
         <div className="mt-6 flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[70px] w-full rounded-[1.5rem]" />
+            <Skeleton key={i} className="h-[70px] w-full rounded-card" />
           ))}
         </div>
         <Skeleton className="mt-6 h-12 w-full rounded-full" />

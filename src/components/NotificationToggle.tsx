@@ -96,7 +96,7 @@ export function NotificationToggle() {
 
   if (status === "denied") {
     return (
-      <div className="flex items-center justify-between rounded-[1.5rem] border border-line bg-surface-2 px-4 py-3">
+      <div className="flex items-center justify-between rounded-card bg-surface-2 p-3 shadow-clay-inset">
         <span className="text-sm font-bold text-muted">Reminders blocked in browser settings</span>
         <BellIcon className="h-5 w-5 text-muted" />
       </div>
@@ -109,10 +109,10 @@ export function NotificationToggle() {
       type="button"
       onClick={on ? disable : enable}
       disabled={status === "checking" || status === "working"}
-      className="flex items-center justify-between rounded-[1.5rem] border border-line bg-surface-2 px-4 py-3 text-left disabled:opacity-60"
+      className="flex items-center justify-between rounded-card bg-surface p-3 text-left shadow-clay disabled:opacity-60"
     >
       <span className="text-sm font-bold text-ink">{on ? "Reminders on" : "Enable reminders"}</span>
-      <BellIcon className={`h-5 w-5 ${on ? "text-accent" : "text-muted"}`} />
+      <BellIcon className={`h-5 w-5 ${on ? "text-peach-ink" : "text-muted"}`} />
     </button>
   );
 }

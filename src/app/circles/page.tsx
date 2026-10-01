@@ -35,19 +35,19 @@ export default async function CirclesPage() {
     <>
       <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8 pb-32">
         <header>
-          <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Lock in together</p>
+          <p className="font-semibold text-[10px] uppercase tracking-[0.16em] text-muted">Lock in together</p>
           <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">Circles</h1>
         </header>
 
         {circles.length > 0 && (
-          <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
-            <p className="mb-3 px-0.5 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Your circles</p>
+          <section className="rounded-card bg-surface p-5 shadow-clay">
+            <p className="mb-3 px-0.5 font-bold text-[10px] uppercase tracking-[0.16em] text-muted">Your circles</p>
             <div className="flex flex-col gap-2">
               {circles.map((c) => (
                 <Link
                   key={c.id}
                   href={`/circles/${c.id}`}
-                  className="flex items-center justify-between rounded-[1.5rem] border border-line px-4 py-3 text-sm"
+                  className="flex items-center justify-between rounded-tile bg-surface-2 px-4 py-3 text-sm shadow-clay-inset"
                 >
                   <span className="font-bold text-ink">{c.name}</span>
                   <span className="text-muted">

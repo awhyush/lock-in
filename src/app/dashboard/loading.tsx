@@ -11,16 +11,16 @@ export default function DashboardLoading() {
         <Skeleton className="h-12 w-12 rounded-full" />
       </header>
 
-      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+      <section className="rounded-card bg-surface p-5 shadow-clay">
         <Skeleton className="mb-3 h-3 w-16" />
         <div className="flex flex-col gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-[60px] w-full rounded-[1.5rem]" />
+            <Skeleton key={i} className="h-[60px] w-full rounded-tile" />
           ))}
         </div>
       </section>
 
-      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+      <section className="rounded-card bg-surface p-5 shadow-clay">
         <Skeleton className="mb-3 h-3 w-24" />
         <div className="flex flex-col gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -29,7 +29,7 @@ export default function DashboardLoading() {
         </div>
       </section>
 
-      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+      <section className="rounded-card bg-surface p-5 shadow-clay">
         <Skeleton className="h-3 w-24" />
       </section>
     </main>

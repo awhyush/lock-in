@@ -11,12 +11,12 @@ export default function ProfileLoading() {
         </div>
       </header>
 
-      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+      <section className="rounded-card bg-surface p-5 shadow-clay">
         <Skeleton className="mb-3 h-3 w-16" />
-        <Skeleton className="h-14 w-full rounded-[1.5rem]" />
+        <Skeleton className="h-14 w-full rounded-tile" />
       </section>
 
-      <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
+      <section className="rounded-card bg-surface p-5 shadow-clay">
         <Skeleton className="mb-3 h-3 w-32" />
         <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, i) => (

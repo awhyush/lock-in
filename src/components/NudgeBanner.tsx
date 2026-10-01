@@ -15,7 +15,7 @@ export function NudgeBanner({ nudges }: { nudges: NudgeNotice[] }) {
       {visible.map((n) => (
         <div
           key={n.id}
-          className="flex items-center justify-between gap-3 rounded-[1.5rem] border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-ink"
+          className="flex items-center justify-between gap-3 rounded-card bg-peach p-4 text-sm text-peach-ink shadow-clay-peach"
         >
           <span>
             <b>{n.fromName}</b> nudged you in <b>{n.circleName}</b>. Don&apos;t lose your streak.

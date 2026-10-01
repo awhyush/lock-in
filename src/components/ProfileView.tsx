@@ -10,7 +10,7 @@ import { AppNav } from "@/components/AppNav";
 import { NotificationToggle } from "@/components/NotificationToggle";
 
 const inputClass =
-  "w-full rounded-full border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent";
+  "w-full rounded-full bg-surface-2 px-4 py-2.5 text-sm text-ink shadow-clay-inset outline-none focus-visible:ring-2 focus-visible:ring-sage";
 
 function SunIcon({ className }: { className?: string }) {
   return (
@@ -54,7 +54,7 @@ function ThemeRow() {
     <button
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="flex items-center justify-between rounded-[1.5rem] border border-line bg-surface-2 px-4 py-3 text-left"
+      className="flex items-center justify-between rounded-card bg-surface p-3 text-left shadow-clay"
     >
       <span className="text-sm font-bold text-ink">{isDark ? "Dark mode" : "Light mode"}</span>
       {mounted && (isDark ? <SunIcon className="h-5 w-5 text-muted" /> : <MoonIcon className="h-5 w-5 text-muted" />)}
@@ -108,28 +108,28 @@ export function ProfileView({ name, email, hasPassword }: { name: string; email:
         <header className="flex items-center gap-4">
           <Avatar name={name} />
           <div>
-            <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">My profile</p>
+            <p className="font-semibold text-[10px] uppercase tracking-[0.16em] text-muted">My profile</p>
             <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">{name}</h1>
           </div>
         </header>
 
-        <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
-          <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Account</p>
-          <div className="rounded-[1.5rem] border border-line bg-surface-2 px-4 py-3">
+        <section className="rounded-card bg-surface p-5 shadow-clay">
+          <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-muted">Account</p>
+          <div className="rounded-card bg-surface-2 px-4 py-3 shadow-clay-inset">
             <p className="text-xs text-muted">Email</p>
             <p className="text-sm font-bold text-ink">{email}</p>
           </div>
         </section>
 
-        <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
-          <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Preferences</p>
+        <section className="rounded-card bg-surface p-5 shadow-clay">
+          <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-muted">Preferences</p>
           <div className="flex flex-col gap-2">
             <ThemeRow />
             <NotificationToggle />
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex items-center justify-between rounded-[1.5rem] border border-line bg-surface-2 px-4 py-3 text-left"
+              className="flex items-center justify-between rounded-card bg-surface p-3 text-left shadow-clay"
             >
               <span className="text-sm font-bold text-warn">Sign out</span>
               <SignOutIcon className="h-5 w-5 text-warn" />
@@ -137,8 +137,8 @@ export function ProfileView({ name, email, hasPassword }: { name: string; email:
           </div>
         </section>
 
-        <section className="rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
-          <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">
+        <section className="rounded-card bg-surface p-5 shadow-clay">
+          <p className="mb-3 font-bold text-[10px] uppercase tracking-[0.16em] text-muted">
             {hasPassword ? "Change password" : "Set a password"}
           </p>
           {!hasPassword && (
@@ -190,7 +190,7 @@ export function ProfileView({ name, email, hasPassword }: { name: string; email:
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-ink disabled:opacity-60"
+              className="mt-1 rounded-full bg-sage px-4 py-3 text-sm font-bold text-sage-ink shadow-clay-sage disabled:opacity-60"
             >
               {loading ? "Saving..." : hasPassword ? "Update password" : "Set password"}
             </button>
