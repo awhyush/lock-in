@@ -22,6 +22,7 @@ import { AppNav } from "@/components/AppNav";
 import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
 import { NudgeBanner, type NudgeNotice } from "@/components/NudgeBanner";
 import { ProgressBar } from "@/components/ProgressBar";
+import { updateAppBadge } from "@/lib/badge";
 
 const BOOLEAN_KEYS: Extract<HabitKey, "exercise" | "study" | "build" | "movement">[] = [
   "exercise",
@@ -119,6 +120,10 @@ export function Tracker({
   const doneTodayCount = requiredToday.filter((key) => habitDone(today, key)).length;
   const requiredTodayCount = requiredToday.length;
   const progressPercent = requiredTodayCount > 0 ? Math.round((doneTodayCount / requiredTodayCount) * 100) : 100;
+
+  useEffect(() => {
+    updateAppBadge(requiredTodayCount - doneTodayCount);
+  }, [requiredTodayCount, doneTodayCount]);
 
   const minutesToday = BOOLEAN_KEYS.filter((key) => habitDone(today, key)).reduce(
     (sum, key) => sum + (targets[key].minutes ?? 0),

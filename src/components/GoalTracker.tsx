@@ -15,6 +15,7 @@ import { AppNav } from "@/components/AppNav";
 import { HabitGrid, type HabitGridRow } from "@/components/HabitGrid";
 import { NudgeBanner, type NudgeNotice } from "@/components/NudgeBanner";
 import { ProgressBar } from "@/components/ProgressBar";
+import { updateAppBadge } from "@/lib/badge";
 
 const TILE_TONES = ["sage", "peach", "butter", "sky"] as const;
 type Tone = (typeof TILE_TONES)[number];
@@ -92,6 +93,10 @@ export function GoalTracker({
 
   const doneCount = goals.filter((g) => goalEntryDone(g, today[g.id])).length;
   const progressPercent = goals.length > 0 ? Math.round((doneCount / goals.length) * 100) : 0;
+
+  useEffect(() => {
+    updateAppBadge(goals.length - doneCount);
+  }, [goals.length, doneCount]);
 
   async function selectRange(n: number) {
     setRangeDays(n);
