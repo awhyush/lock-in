@@ -4,7 +4,22 @@ import { useEffect, useState } from "react";
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-type Status = "unsupported" | "checking" | "denied" | "off" | "on" | "working";
+type Status = "unsupported" | "ios-not-installed" | "checking" | "denied" | "off" | "on" | "working";
+
+/** iOS/iPadOS Safari doesn't expose PushManager at all in a regular browser tab — the Push
+ * API only exists once the site has been added to the Home Screen and is running standalone.
+ * Distinguishing this from "genuinely unsupported browser" lets us show the user something
+ * actionable (install it) instead of the toggle just silently not being there, which looks
+ * identical to a missing/broken feature. */
+function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(display-mode: standalone)").matches || (window.navigator as { standalone?: boolean }).standalone === true;
+}
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -35,7 +50,7 @@ export function NotificationToggle() {
 
   useEffect(() => {
     if (!VAPID_PUBLIC_KEY || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-      setStatus("unsupported");
+      setStatus(isIOS() && !isStandalone() ? "ios-not-installed" : "unsupported");
       return;
     }
     if (Notification.permission === "denied") {
@@ -93,6 +108,18 @@ export function NotificationToggle() {
   }
 
   if (status === "unsupported") return null;
+
+  if (status === "ios-not-installed") {
+    return (
+      <div className="flex items-start gap-3 rounded-card bg-surface-2 p-3 shadow-clay-inset">
+        <BellIcon className="h-5 w-5 flex-none text-muted" />
+        <span className="text-xs text-muted">
+          To get reminders, add this app to your Home Screen first: tap the Share icon in Safari, then{" "}
+          <b className="text-ink">Add to Home Screen</b> — then open it from there.
+        </span>
+      </div>
+    );
+  }
 
   if (status === "denied") {
     return (
