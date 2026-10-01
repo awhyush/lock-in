@@ -6,24 +6,12 @@ export const contentType = "image/png";
 export default function Icon() {
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#bfe3c6",
-          borderRadius: 96,
-        }}
-      >
-        <svg width="300" height="300" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 2.5c1 2.5-1.5 3.5-1.5 6 0 1.4 1 2.3 2.2 2.3.9 0 1.6-.6 1.8-1.4 1.6 1.4 2.5 3.3 2.5 5.1a5 5 0 0 1-10 0c0-4 2.5-6.5 5-12Z"
-            fill="#a4593a"
-          />
-        </svg>
-      </div>
+      <svg width="512" height="512" viewBox="0 0 100 100" fill="none">
+        <rect width="100" height="100" rx="16" fill="#F0EDE6" />
+        <path d="M34 16 L20 48 L15 82 L50 82 L53 70 L28 70 L46 29 L34 16 Z" fill="#0D0D0D" />
+        <polygon points="56,26 68,20 68,28 56,34" fill="#0D0D0D" />
+        <rect x="56" y="38" width="12" height="44" fill="#0D0D0D" />
+      </svg>
     ),
     { ...size },
   );
