@@ -127,7 +127,7 @@ export function GoalTracker({
 
   return (
     <>
-      <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8 pb-32">
         <header className="flex items-start justify-between gap-3">
           <div>
             <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">{todayLabel}</p>
@@ -139,7 +139,7 @@ export function GoalTracker({
         <NudgeBanner nudges={nudges} />
 
         <section className="relative overflow-hidden rounded-[2.5rem] border border-line bg-surface p-5 shadow-soft">
-          <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 translate-x-10 -translate-y-10 rounded-full bg-sage/20" />
+          <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-sage/20" />
 
           <p className="relative mb-4 font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Today</p>
 

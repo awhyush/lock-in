@@ -56,7 +56,7 @@ export function CircleView({ circle, viewerId }: { circle: CircleDetail; viewerI
 
   return (
     <>
-      <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8 pb-32">
         <header className="flex items-start justify-between gap-3">
           <div>
             <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Circle</p>

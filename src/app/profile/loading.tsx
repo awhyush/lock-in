@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/Skeleton";
 
 export default function ProfileLoading() {
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8 pb-32">
       <header className="flex items-center gap-4">
         <Skeleton className="h-12 w-12 rounded-full" />
         <div className="flex flex-col gap-2">

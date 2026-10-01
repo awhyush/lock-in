@@ -33,7 +33,7 @@ export default async function CirclesPage() {
 
   return (
     <>
-      <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8 pb-32">
         <header>
           <p className="font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Lock in together</p>
           <h1 className="font-black text-[32px] leading-[1.05] tracking-tight text-ink">Circles</h1>

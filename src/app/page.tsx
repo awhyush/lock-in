@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -18,20 +19,24 @@ export default async function Home() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-16 px-4 py-10">
       <nav className="flex items-center justify-between">
-        <span className="font-black text-xl tracking-tight text-ink">THE LOCK-IN</span>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/login" className="text-muted underline underline-offset-2">
+        <span className="font-black text-lg tracking-tight text-ink sm:text-xl">THE LOCK-IN</span>
+        <div className="flex items-center gap-2 text-sm sm:gap-4">
+          <Link href="/login" className="whitespace-nowrap text-muted underline underline-offset-2">
             Sign in
           </Link>
-          <Link href="/signup" className="rounded-full bg-accent px-4 py-2 font-bold text-accent-ink">
-            Create account
+          <Link
+            href="/signup"
+            className="whitespace-nowrap rounded-full bg-accent px-3 py-1.5 font-bold text-accent-ink sm:px-4 sm:py-2"
+          >
+            <span className="sm:hidden">Sign up</span>
+            <span className="hidden sm:inline">Create account</span>
           </Link>
           <ThemeToggle />
         </div>
       </nav>
 
       <section className="relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] border border-line bg-surface p-8 shadow-soft">
-        <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 translate-x-16 -translate-y-16 rounded-full bg-sage/20" />
+        <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-sage/20" />
 
         <p className="relative font-bold text-[10px] uppercase tracking-[0.16em] text-sage">Daily reset tracker</p>
         <h1 className="relative max-w-xl font-black text-5xl leading-[1.02] tracking-tight text-ink text-balance">
@@ -50,32 +55,41 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <ol className="flex flex-col gap-3">
-          {[
-            { title: "Pick your plan", body: "Choose a recommended preset, or set your own minutes for each habit." },
-            { title: "Check off today", body: "Five habits, weekday-aware. Hit the minimum and the day still counts." },
-            { title: "Watch the streak", body: "See your progress across 14/30/90 days and keep your streak alive." },
-          ].map((step, i) => (
-            <li key={step.title} className="flex gap-4 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
-              <span className="text-lg font-black tabular-nums text-accent">{i + 1}</span>
-              <span>
-                <span className="block text-sm font-bold text-ink">{step.title}</span>
-                <span className="block text-sm text-muted">{step.body}</span>
+      <section className="flex flex-col gap-6 sm:flex-row sm:items-start">
+        <div className="flex flex-1 flex-col gap-4">
+          <ol className="flex flex-col gap-3">
+            {[
+              { title: "Pick your plan", body: "Choose a recommended preset, or set your own minutes for each habit." },
+              { title: "Check off today", body: "Five habits, weekday-aware. Hit the minimum and the day still counts." },
+              { title: "Watch the streak", body: "See your progress across 14/30/90 days and keep your streak alive." },
+            ].map((step, i) => (
+              <li key={step.title} className="flex gap-4 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+                <span className="text-lg font-black tabular-nums text-accent">{i + 1}</span>
+                <span>
+                  <span className="block text-sm font-bold text-ink">{step.title}</span>
+                  <span className="block text-sm text-muted">{step.body}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <div className="flex flex-wrap gap-2">
+            {HABIT_KEYS.map((key) => (
+              <span
+                key={key}
+                className="rounded-full border border-line px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted"
+              >
+                {HABIT_LABELS[key]}
               </span>
-            </li>
-          ))}
-        </ol>
-        <div className="flex flex-wrap gap-2">
-          {HABIT_KEYS.map((key) => (
-            <span
-              key={key}
-              className="rounded-full border border-line px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted"
-            >
-              {HABIT_LABELS[key]}
-            </span>
-          ))}
+            ))}
+          </div>
         </div>
+        <Image
+          src="/landing/streak.png"
+          alt="Today's habits with a 6-day streak and this week's completion percentage"
+          width={373}
+          height={575}
+          className="mx-auto w-full max-w-[220px] flex-none rounded-[1.5rem] border border-line shadow-soft sm:mx-0 sm:w-[220px]"
+        />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -93,15 +107,31 @@ export default async function Home() {
         <p className="max-w-md text-[15px] leading-relaxed text-muted">
           Going solo works, but it&apos;s easier with backup.
         </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+        <div className="flex flex-col gap-4 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft sm:flex-row sm:items-center">
+          <Image
+            src="/landing/circles.png"
+            alt="A circle's leaderboard showing each member's streak and daily habit grid"
+            width={373}
+            height={543}
+            className="mx-auto w-full max-w-[200px] flex-none rounded-[1.25rem] border border-line sm:mx-0"
+          />
+          <div>
             <p className="text-sm font-bold text-ink">Circles</p>
             <p className="mt-1 text-sm text-muted">
               Share your streak with a small group. See everyone&apos;s progress side by side, and nudge someone
               who&apos;s about to lose their streak before the day&apos;s out.
             </p>
           </div>
-          <div className="rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft">
+        </div>
+        <div className="flex flex-col gap-4 rounded-[1.5rem] border border-line bg-surface p-4 shadow-soft sm:flex-row sm:items-center">
+          <Image
+            src="/landing/notifications.png"
+            alt="A 'Reminders on' toggle in profile preferences"
+            width={373}
+            height={224}
+            className="mx-auto w-full max-w-[200px] flex-none rounded-[1.25rem] border border-line sm:mx-0"
+          />
+          <div>
             <p className="text-sm font-bold text-ink">Reminders</p>
             <p className="mt-1 text-sm text-muted">
               Turn on push notifications and get a nudge if you haven&apos;t logged today yet — before it&apos;s too

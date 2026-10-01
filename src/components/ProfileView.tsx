@@ -104,7 +104,7 @@ export function ProfileView({ name, email, hasPassword }: { name: string; email:
 
   return (
     <>
-      <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8 pb-32">
         <header className="flex items-center gap-4">
           <Avatar name={name} />
           <div>

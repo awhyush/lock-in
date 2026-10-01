@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/Skeleton";
 
 export default function CircleDetailLoading() {
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-8 pb-32">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8 pb-32">
       <header className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-2">
           <Skeleton className="h-3 w-14" />
